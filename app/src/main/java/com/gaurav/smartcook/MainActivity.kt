@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-//go
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
