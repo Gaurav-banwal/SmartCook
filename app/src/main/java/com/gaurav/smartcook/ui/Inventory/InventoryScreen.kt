@@ -6,27 +6,34 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
@@ -34,8 +41,11 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,12 +56,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.Home.food
 import com.gaurav.smartcook.ui.theme.AppTheme
+import kotlin.text.contains
 
 
 data class ingredientData(
@@ -66,48 +78,65 @@ data class ingredientData(
 fun SimpleSearchBar(
     textFieldState: TextFieldState,
     onSearch: (String) -> Unit,
-    searchResults: List<String>,
+    suggestions: List<String>,
     modifier: Modifier = Modifier
 ) {
     // Controls expansion state of the search bar
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Box(
-        modifier
-
+        modifier = modifier
             .semantics { isTraversalGroup = true }
+            .fillMaxWidth(),
+        contentAlignment = Alignment.TopCenter
     ) {
         SearchBar(
             modifier = Modifier
-                .align(Alignment.TopCenter)
                 .semantics { traversalIndex = 0f },
             inputField = {
                 SearchBarDefaults.InputField(
                     query = textFieldState.text.toString(),
                     onQueryChange = { textFieldState.edit { replace(0, length, it) } },
                     onSearch = {
-                        onSearch(textFieldState.text.toString())
+                        onSearch(it)
                         expanded = false
                     },
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search") }
+                    placeholder = { Text("Search ingredients...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (textFieldState.text.isNotEmpty()) {
+                            IconButton(onClick = { textFieldState.edit { replace(0, length, "") } }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear text")
+                            }
+                        }
+                    }
                 )
             },
             expanded = expanded,
             onExpandedChange = { expanded = it },
+            colors = SearchBarDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
         ) {
-            // Display search results in a scrollable column
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                searchResults.forEach { result ->
+            // Display search results in an efficient scrollable list
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(suggestions) { result ->
                     ListItem(
                         headlineContent = { Text(result) },
+                        leadingContent = { Icon(Icons.Default.History, contentDescription = null) },
                         modifier = Modifier
                             .clickable {
                                 textFieldState.edit { replace(0, length, result) }
                                 expanded = false
+                                onSearch(result)
                             }
-                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
                     )
                 }
             }
@@ -115,10 +144,9 @@ fun SimpleSearchBar(
     }
 }
 
-
-
 @Composable
-fun IngredientItem(ingredientData: ingredientData,modifier: Modifier= Modifier,
+fun IngredientItem(ingredientData: ingredientData,
+                   modifier: Modifier= Modifier,
              onIncClick : (ingredientData) -> Unit = {},
              onDecClick : (ingredientData) -> Unit = {}
 ){
@@ -126,10 +154,11 @@ fun IngredientItem(ingredientData: ingredientData,modifier: Modifier= Modifier,
 
     Surface(
         modifier = modifier
-            .height(100.dp)
-            .fillMaxWidth().padding(10.dp),
-        color = MaterialTheme.colorScheme.secondary,
-        shape = RoundedCornerShape(30.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(30.dp),
+        tonalElevation = 10.dp
     ){
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -147,7 +176,9 @@ fun IngredientItem(ingredientData: ingredientData,modifier: Modifier= Modifier,
                 Text(text = ingredientData.name, style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.weight(1f))
             Column(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = "Quantity")
@@ -163,8 +194,8 @@ fun IngredientItem(ingredientData: ingredientData,modifier: Modifier= Modifier,
                             .background(color = MaterialTheme.colorScheme.tertiary)
 
                             .clickable {
-                            onDecClick(ingredientData)
-                        },
+                                onDecClick(ingredientData)
+                            },
                         contentDescription = "Subtract button to reduce items",
                         tint = MaterialTheme.colorScheme.onSecondary
                     )
@@ -174,9 +205,9 @@ fun IngredientItem(ingredientData: ingredientData,modifier: Modifier= Modifier,
                             .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
                             .background(color = MaterialTheme.colorScheme.tertiary)
 
-                            .clickable{
-                            onIncClick(ingredientData)
-                        },
+                            .clickable {
+                                onIncClick(ingredientData)
+                            },
                         contentDescription = "Add button to add items")
                 }
             }
@@ -187,66 +218,89 @@ fun IngredientItem(ingredientData: ingredientData,modifier: Modifier= Modifier,
 }
 
 @Composable
-fun InventoryScreen(){
-    Box(modifier = Modifier.fillMaxSize()
-        .background(color = MaterialTheme.colorScheme.surface),
+fun InventoryScreen() {
+
+
+    // 1. Properly remember the search state
+    val searchState = rememberTextFieldState()
+// Mock data list
+    val allIngredients = remember {
+        mutableStateListOf(
+            ingredientData(1, "Pizza Dough", 7, R.drawable.pizza),
+            ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza),
+            ingredientData(3, "Mozzarella", 5, R.drawable.pizza)
+        )
+    }
+
+
+    // 2. Real-time filtering logic
+    val filteredIngredients by remember {
+        derivedStateOf {
+            allIngredients.filter {
+                it.name.contains(searchState.text, ignoreCase = true)
+            }
+        }
+    }
+    
+    // 3. Dynamic suggestions based on pantry items
+    val suggestions by remember {
+        derivedStateOf {
+            if (searchState.text.isEmpty()) emptyList()
+            else allIngredients
+                .map { it.name }
+                .filter { it.contains(searchState.text, ignoreCase = true) }
+                .take(5)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.surface),
 
         ) {
-
-
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 1.dp)
 
         ) {
-
             SimpleSearchBar(
-                textFieldState = TextFieldState(),
+                textFieldState = searchState,
                 onSearch = { },
-                searchResults = listOf("Pizza", "Pasta", "Salad"),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                suggestions = suggestions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            Text(
+                text = "My Pantry",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
             )
 
 
-            Column() {
-                Text(
-                    text = "Inventory Items",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(start = 20.dp, bottom = 10.dp)
-                )
+            LazyColumn(Modifier.fillMaxSize()) {
+                items(filteredIngredients, key = { it.id }) { ingredient ->
+                    IngredientItem(
+                        ingredientData = ingredient,
+                        onIncClick = { /* Update logic */ },
+                        onDecClick = { /* Update logic */ }
+                    )
+                }
 
-                // For now, hardcoded item. In future, use LazyColumn here.
-                IngredientItem(ingredientData(1, "Pizza Dough", 7, R.drawable.pizza))
-                IngredientItem(ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza))
             }
-
-        }
-
-        FloatingActionButton(
-            onClick = { /* Navigate to Add Screen */ },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ) {
-
-            Icon(Icons.Default.Add, contentDescription = "Add Ingredient")
         }
     }
 }
 
 
 
-@Preview
-@Composable
-fun previewInv(){
+    @Preview
+    @Composable
+    fun previewInv() {
 
-       AppTheme() {
-           InventoryScreen()
-       }
+        AppTheme() {
+            InventoryScreen()
+        }
 
-}
+    }
