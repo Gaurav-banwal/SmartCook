@@ -75,7 +75,7 @@ fun OnGoing(modifier: Modifier = Modifier
             .width(320.dp)
             ,
 
-        color = MaterialTheme.colorScheme.secondary,
+        color = MaterialTheme.colorScheme.secondaryContainer,
 
     ) {
         Column(

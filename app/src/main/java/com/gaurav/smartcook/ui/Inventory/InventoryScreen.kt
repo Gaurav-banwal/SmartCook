@@ -62,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.Home.food
+import com.gaurav.smartcook.ui.commonui.SimpleSearchBar
 import com.gaurav.smartcook.ui.theme.AppTheme
 import kotlin.text.contains
 
@@ -72,77 +73,6 @@ data class ingredientData(
     val Quantity:Int,
     val image:Int
 )
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SimpleSearchBar(
-    textFieldState: TextFieldState,
-    onSearch: (String) -> Unit,
-    suggestions: List<String>,
-    modifier: Modifier = Modifier
-) {
-    // Controls expansion state of the search bar
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    Box(
-        modifier = modifier
-            .semantics { isTraversalGroup = true }
-            .fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        SearchBar(
-            modifier = Modifier
-                .semantics { traversalIndex = 0f },
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = textFieldState.text.toString(),
-                    onQueryChange = { textFieldState.edit { replace(0, length, it) } },
-                    onSearch = {
-                        onSearch(it)
-                        expanded = false
-                    },
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search ingredients...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (textFieldState.text.isNotEmpty()) {
-                            IconButton(onClick = { textFieldState.edit { replace(0, length, "") } }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear text")
-                            }
-                        }
-                    }
-                )
-            },
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-            colors = SearchBarDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
-        ) {
-            // Display search results in an efficient scrollable list
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                items(suggestions) { result ->
-                    ListItem(
-                        headlineContent = { Text(result) },
-                        leadingContent = { Icon(Icons.Default.History, contentDescription = null) },
-                        modifier = Modifier
-                            .clickable {
-                                textFieldState.edit { replace(0, length, result) }
-                                expanded = false
-                                onSearch(result)
-                            }
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun IngredientItem(ingredientData: ingredientData,
