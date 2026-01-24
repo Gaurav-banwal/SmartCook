@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
@@ -24,8 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -194,7 +191,7 @@ fun SmartCookScreen(
 
         NavHost(
             navController = navController,
-            startDestination = BottomBarScreen.Home.route,
+            startDestination = Screen.Home.route,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -211,13 +208,23 @@ fun SmartCookScreen(
                 route = "auth"
             ){
                 composable(route = Screen.Login.route){
-                    LoginScreen()
+                    LoginScreen(
+                        onSignUpClick = { navController.navigate(Screen.Registration.route) },
+                        onForgotPasswordClick = { navController.navigate(Screen.ForgetPassword.route) },
+                        onLoginClick = { _, _ -> navController.navigate(Screen.Home.route) }
+                    )
                 }
                 composable(route = Screen.Registration.route){
-                    RegistrationScreen()
+                    RegistrationScreen(
+                        onLoginClick = { navController.navigate(Screen.Login.route) },
+                        onSignUpClick = { _, _, _ -> navController.navigate(Screen.Home.route) }
+                    )
                 }
                 composable(route = Screen.ForgetPassword.route) {
-                    ForgetScreen()
+                    ForgetScreen(
+                        onBackToLoginClick = { navController.navigate(Screen.Login.route) },
+                        onSendResetLinkClick = { _ -> /* Handle reset */ }
+                    )
                 }
 
             }
@@ -250,5 +257,3 @@ fun prev(){
         SmartCookScreen()
     }
 }
-
-

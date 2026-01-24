@@ -87,7 +87,7 @@ fun IngredientItem(ingredientData: ingredientData,
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(30.dp),
+        shape = RoundedCornerShape(16.dp),
         tonalElevation = 10.dp
     ){
         Row(modifier = Modifier.fillMaxWidth(),
@@ -99,7 +99,7 @@ fun IngredientItem(ingredientData: ingredientData,
                 modifier = Modifier
                     .size(100.dp)
                     .padding(10.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
 
