@@ -86,8 +86,7 @@ sealed class Screen(val route: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SmartCookTopBar(  canNavigateBack: Boolean,
-                      navigateUp: () -> Unit,
+fun SmartCookTopBar(
                       modifier: Modifier){
     TopAppBar(
         title = { Text(stringResource( R.string.app_name))},
@@ -95,16 +94,7 @@ fun SmartCookTopBar(  canNavigateBack: Boolean,
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.onSecondary
         ),
-        navigationIcon = {
-            if (canNavigateBack) {
-                IconButton(onClick = navigateUp) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_button)
-                    )
-                }
-            }
-        }
+
 
     )
 
@@ -155,6 +145,7 @@ fun SmartCookScreen(
 ){
     // Get current back stack entry to track state for TopBar
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
     val navlist = listOf(
         BottomBarScreen.Home,
@@ -165,12 +156,11 @@ fun SmartCookScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            SmartCookTopBar(modifier = Modifier,
-                canNavigateBack = navController.previousBackStackEntry != null,
-                navigateUp = {  navController.navigateUp() })
+                if(currentRoute!=Screen.Login.route && currentRoute!=Screen.Registration.route && currentRoute!=Screen.ForgetPassword.route)
+            SmartCookTopBar(modifier = Modifier)
         },
         bottomBar = {
-
+            if(currentRoute!=Screen.Login.route && currentRoute!=Screen.Registration.route && currentRoute!=Screen.ForgetPassword.route)
             SmartCookBottonBar(modifier = Modifier, navController, navlist)
         },
 
@@ -191,7 +181,7 @@ fun SmartCookScreen(
 
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = "auth",
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)

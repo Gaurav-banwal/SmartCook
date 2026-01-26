@@ -22,9 +22,25 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.theme.AppTheme
 
+
+@Composable
+fun GoogleSignInButton(onClick: () -> Unit) {
+    AndroidView(
+        factory = { context ->
+            com.google.android.gms.common.SignInButton(context).apply {
+                setSize(com.google.android.gms.common.SignInButton.SIZE_WIDE)
+                setOnClickListener { onClick() }
+            }
+        },
+        update = { },
+        modifier = Modifier.fillMaxWidth()
+            .height(56.dp)
+    )
+}
 @Composable
 fun LoginScreen(
     onLoginClick: (String, String) -> Unit = { _, _ -> },
@@ -151,31 +167,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Google Login Button
-            OutlinedButton(
-                onClick = onGoogleLoginClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    width = 1.dp
-                )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    // Note: You should add a google logo icon in your res/drawable
-                    // painterResource(id = R.drawable.ic_google)
-                    Text(
-                        "Sign in with Google",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            GoogleSignInButton(onClick = onGoogleLoginClick)
 
             Spacer(modifier = Modifier.height(32.dp))
 

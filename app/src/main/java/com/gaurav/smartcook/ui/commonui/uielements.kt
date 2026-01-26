@@ -64,7 +64,7 @@ fun FoodItem(food: food,modifier: Modifier= Modifier,
         modifier = modifier
             .height(110.dp)
             .fillMaxWidth()
-            .padding(horizontal = 15.dp, vertical = 5.dp),
+            .padding(horizontal = 15.dp, vertical = 0.dp),
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .4f),
         shape = RoundedCornerShape(24.dp),
         tonalElevation = 2.dp

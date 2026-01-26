@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.commonui.FoodItem
 import com.gaurav.smartcook.ui.theme.AppTheme
+import java.util.Calendar
 
 
 data class food(
@@ -81,6 +82,18 @@ val list = listOf<food>(
 
 @Composable
 fun HomeHeader(username: String) {
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    var greeting by rememberSaveable { mutableStateOf("") }
+        if(hour in 0..11)
+            greeting = "Good Morning"
+        else if(hour in 12..16)
+            greeting = "Good Afternoon"
+         else if(hour in 17..20)
+            greeting = "Good Evening"
+
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -90,7 +103,7 @@ fun HomeHeader(username: String) {
     ) {
         Column {
             Text(
-                text = "Hello, $username!",
+                text = "$greeting, $username!",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
