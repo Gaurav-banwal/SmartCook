@@ -16,11 +16,17 @@ interface AuthRepository {
 
     val currentUser: FirebaseUser?
     suspend fun login(email: String, password: String): Resource<FirebaseUser>
+
+    suspend fun googleSignIn(email: String, password: String): Resource<FirebaseUser>
     suspend fun signup(name: String, email: String, password: String): Resource<FirebaseUser>
+
+    fun forgetPassword(email: String): Resource<FirebaseUser>
     fun logout()
+
 }
 
 class NetworkAuthRepository: AuthRepository {
+
 
     override val currentUser: FirebaseUser?
         get() = TODO("Not yet implemented")
@@ -38,7 +44,16 @@ class NetworkAuthRepository: AuthRepository {
     {
         TODO("Not yet implemented")
     }
+
+    override suspend fun googleSignIn(email: String, password: String): Resource<FirebaseUser> {
+        TODO("Not yet implemented")
+    }
+
     override fun logout(){
+        TODO("Not yet implemented")
+    }
+
+    override fun forgetPassword(email: String): Resource<FirebaseUser> {
         TODO("Not yet implemented")
     }
 
