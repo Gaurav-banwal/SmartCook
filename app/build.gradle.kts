@@ -2,8 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-}
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
+    id("com.google.gms.google-services")
 
+
+}
+//kjbkhj
+//
 android {
     namespace = "com.gaurav.smartcook"
     compileSdk {
@@ -11,6 +17,7 @@ android {
     }
 
     defaultConfig {
+        //
         applicationId = "com.gaurav.smartcook"
         minSdk = 24
         targetSdk = 36
@@ -43,6 +50,21 @@ android {
 //
 
 dependencies {
+
+    implementation("com.google.dagger:hilt-android:2.51.1")
+
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
+    // Firebase BOM (manages versions)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+
+    // Firebase Auth
+    implementation("com.google.firebase:firebase-auth")
+
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
+
+
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
