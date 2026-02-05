@@ -1,6 +1,7 @@
 package com.gaurav.smartcook.ui.Favourate
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,6 +61,17 @@ fun FavouriteScreen() {
             }
         }
 
+        // 3. Dynamic suggestions based on pantry items
+        val suggestions by remember {
+            derivedStateOf {
+                if (searchState.text.isEmpty()) emptyList()
+                else allIngredients
+                    .map { it.name }
+                    .filter { it.contains(searchState.text, ignoreCase = true) }
+                    .take(5)
+            }
+        }
+
 
 
         Box( modifier = Modifier
@@ -70,7 +82,7 @@ fun FavouriteScreen() {
                 SimpleSearchBar(
                     textFieldState = searchState,
                     onSearch = { },
-                    suggestions = emptyList(),
+                    suggestions = suggestions,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -82,7 +94,9 @@ fun FavouriteScreen() {
                     modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
                 )
 
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
                     items(filteredIngredients, key = { it.id }) { ingredient ->
                         FoodItem(
                             food = ingredient,

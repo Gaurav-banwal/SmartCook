@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.R
@@ -87,7 +88,7 @@ fun IngredientItem(ingredientData: ingredientData,
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(30.dp),
+        shape = RoundedCornerShape(16.dp),
         tonalElevation = 10.dp
     ){
         Row(modifier = Modifier.fillMaxWidth(),
@@ -99,11 +100,13 @@ fun IngredientItem(ingredientData: ingredientData,
                 modifier = Modifier
                     .size(100.dp)
                     .padding(10.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
 
-                Text(text = ingredientData.name, style = MaterialTheme.typography.headlineMedium)
+                Text(text = ingredientData.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.weight(1f))
             Column(
                 modifier = Modifier
@@ -111,7 +114,8 @@ fun IngredientItem(ingredientData: ingredientData,
                     .padding(bottom = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Quantity")
+                Text(text = "Quantity",
+                    style = MaterialTheme.typography.bodyMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,

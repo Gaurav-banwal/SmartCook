@@ -45,6 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.ui.Home.food
 
@@ -60,10 +61,12 @@ fun FoodItem(food: food,modifier: Modifier= Modifier,
 
     Surface(
         modifier = modifier
-            .height(100.dp)
-            .fillMaxWidth().padding(10.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(30.dp)
+            .height(110.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 15.dp, vertical = 0.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .4f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 2.dp
     ){
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -74,12 +77,21 @@ fun FoodItem(food: food,modifier: Modifier= Modifier,
                 modifier = Modifier
                     .size(100.dp)
                     .padding(10.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
-            Column() {
-                Text(text = food.name, style = MaterialTheme.typography.headlineMedium)
-                Text(text = food.time)
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                Text(
+                    text = food.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = food.time,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                )
             }
             Spacer(modifier = Modifier.weight(1f))
             if(toshow){
@@ -87,14 +99,14 @@ fun FoodItem(food: food,modifier: Modifier= Modifier,
                 Icon(
                     imageVector = imageVector,
                     modifier = Modifier.padding(15.dp)
-                        .size(35.dp)
+                        .size(30.dp)
                         .clickable{
 
                             likeness = !likeness
                             onFavouriteClick(food)
                         },
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondary
+                    tint = if (likeness) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
 
                 )
             }
