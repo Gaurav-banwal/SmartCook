@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -23,10 +24,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gaurav.smartcook.ui.theme.AppTheme
+import com.gaurav.smartcook.viewmodel.AuthViewModel
 
 @Composable
 fun RegistrationScreen(
+    viewModel: AuthViewModel = viewModel(),
     onSignUpClick: (String, String, String) -> Unit = { _, _, _ -> },
     onGoogleSignUpClick: () -> Unit = {},
     onLoginClick: () -> Unit = {}
@@ -38,6 +42,16 @@ fun RegistrationScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    val uiState by viewModel.registerstate.collectAsState()
+
+    if(uiState.isLoading){
+        CircularProgressIndicator()
+
+    }
+    if(uiState.error!=null){
+        Text(text = uiState.error!!,color = Color.Red)
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),

@@ -17,11 +17,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gaurav.smartcook.ui.theme.AppTheme
+import com.gaurav.smartcook.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgetScreen(
+    viewModel: AuthViewModel = viewModel(),
     onSendResetLinkClick: (String) -> Unit = {},
     onBackToLoginClick: () -> Unit = {}
 ) {
