@@ -265,7 +265,7 @@ fun SmartCookScreen(
                         }
                     }
 
-
+///
                     RegistrationScreen(
                         viewModel = authViewModel,
                         onSignUpClick = { name, email, password ->
