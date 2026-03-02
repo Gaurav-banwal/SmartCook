@@ -1,5 +1,6 @@
 package com.gaurav.smartcook.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -37,6 +38,17 @@ class AuthViewModel(
     // Password Reset State
     private val _resetstate = MutableStateFlow(AuthUiState())
     val resetstate: StateFlow<AuthUiState> = _resetstate.asStateFlow()
+
+
+
+    init {
+        // Check if a user session already exists
+        val currentUser = firebaseAuth.currentUser
+        if (currentUser != null) {
+            // Immediately set the state to success
+            _loginstate.value = AuthUiState(user = currentUser, isSuccess = true)
+        }
+    }
 
     /**
      * Authenticate user with Email and Password
@@ -95,6 +107,7 @@ class AuthViewModel(
      * Authenticate using a Google ID Token
      */
     fun googleSignIn(idtoken: String) {
+        Log.d("AUTH", "Received token: $idtoken")
         viewModelScope.launch {
             _loginstate.value = AuthUiState(isLoading = true)
             try {
@@ -105,6 +118,10 @@ class AuthViewModel(
                 _loginstate.value = AuthUiState(error = e.localizedMessage ?: "Google sign in failed")
             }
         }
+    }
+    fun logout() {
+        firebaseAuth.signOut()
+        _loginstate.value = AuthUiState(user = null, isSuccess = false)
     }
 
     /**

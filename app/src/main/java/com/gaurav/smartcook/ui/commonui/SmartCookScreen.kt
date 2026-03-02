@@ -248,7 +248,12 @@ fun SmartCookScreen(
                         viewModel = authViewModel,
                         onLoginClick = {email, password ->
                              authViewModel.login(email,password)},
-                        onGoogleLoginClick = {},
+
+                        onLoginSucess = {
+                            navController.navigate(Screen.Home.route){
+                                popUpTo("auth") { inclusive = true }
+                            }
+                        },
                         onForgotPasswordClick = { navController.navigate(Screen.ForgetPassword.route)},
                         onSignUpClick = { navController.navigate(Screen.Registration.route)}
                     )
@@ -313,7 +318,11 @@ fun SmartCookScreen(
                 FavouriteScreen()
             }
             composable(route =BottomBarScreen.Settings.route ){
-                SettingScreen()
+                SettingScreen(viewModel = authViewModel,
+                     onLogoutSuccess = {
+                         navController.navigate(Screen.Login.route)
+                     }
+                )
             }
         }
     }

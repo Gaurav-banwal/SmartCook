@@ -1,5 +1,9 @@
 package com.gaurav.smartcook.ui.Login
 
+import android.app.Activity
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,6 +33,9 @@ import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.commonui.loadstate
 import com.gaurav.smartcook.ui.theme.AppTheme
 import com.gaurav.smartcook.viewmodel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun GoogleSignInButton(onClick: () -> Unit) {
@@ -39,7 +47,8 @@ fun GoogleSignInButton(onClick: () -> Unit) {
             }
         },
         update = { },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .height(56.dp)
     )
 }
@@ -47,7 +56,8 @@ fun GoogleSignInButton(onClick: () -> Unit) {
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
     onLoginClick: (String, String) -> Unit = { _, _ -> },
-    onGoogleLoginClick: () -> Unit = {},
+    onLoginSucess:() -> Unit,
+
     onForgotPasswordClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
@@ -55,7 +65,43 @@ fun LoginScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+
+
    val uiState by viewModel.loginstate.collectAsState()
+    val context = LocalContext.current
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onLoginSucess()
+        }
+    }
+
+    val gso  = remember{
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+}
+
+    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+
+    ){result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                account.idToken?.let { token ->
+                    viewModel.googleSignIn(token)
+                }
+            } catch (e: ApiException) {
+
+                Log.w("TAG", "Google sign in failed", e)
+            }
+        }
+
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -174,7 +220,9 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                GoogleSignInButton(onClick = onGoogleLoginClick)
+                GoogleSignInButton(onClick = {
+                    launcher.launch(googleSignInClient.signInIntent)
+                })
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -208,17 +256,19 @@ fun LoginScreen(
                 Text(
                     text = uiState.error!!,
                     color = Color.Red,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp)
                 )
             }
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    AppTheme {
-        LoginScreen()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun LoginScreenPreview() {
+//    AppTheme {
+//        LoginScreen()
+//    }
+//}
