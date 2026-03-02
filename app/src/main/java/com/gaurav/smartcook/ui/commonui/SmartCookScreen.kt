@@ -23,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -51,6 +54,7 @@ import com.gaurav.smartcook.ui.Setting.SettingScreen
 import com.gaurav.smartcook.ui.runrecipie.DishSelectionScreen
 import com.gaurav.smartcook.ui.runrecipie.PrerequisitScreen
 import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
+import com.gaurav.smartcook.viewmodel.AuthViewModel
 
 
 enum class BottomBarScreen(
@@ -154,6 +158,7 @@ fun SmartCookBottonBar(modifier: Modifier,navController: NavHostController,navli
 
 @Composable
 fun SmartCookScreen(
+
     navController:NavHostController = rememberNavController()
 ){
     // Get current back stack entry to track state for TopBar
@@ -165,16 +170,32 @@ fun SmartCookScreen(
         BottomBarScreen.Favorites,
         BottomBarScreen.Settings
     )
+
+     //auth viewmodel
+    val authViewModel: AuthViewModel = viewModel()
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            SmartCookTopBar(modifier = Modifier,
-                canNavigateBack = navController.previousBackStackEntry != null,
-                navigateUp = {  navController.navigateUp() })
+            if(backStackEntry?.destination?.route != Screen.Login.route &&
+                backStackEntry?.destination?.route != Screen.Registration.route
+                && backStackEntry?.destination?.route != Screen.ForgetPassword.route){
+                SmartCookTopBar(modifier = Modifier,
+                    canNavigateBack = false,
+//                    canNavigateBack = navController.previousBackStackEntry != null
+//                            && navController.currentDestination?.route != Screen.Home.route,
+                    navigateUp = {  navController.navigateUp() })
+            }
+
         },
         bottomBar = {
 
-            SmartCookBottonBar(modifier = Modifier, navController, navlist)
+            if(backStackEntry?.destination?.route != Screen.Login.route &&
+                backStackEntry?.destination?.route != Screen.Registration.route
+                && backStackEntry?.destination?.route != Screen.ForgetPassword.route){
+                SmartCookBottonBar(modifier = Modifier, navController, navlist)
+            }
+
         },
 
         floatingActionButton = {
@@ -194,7 +215,7 @@ fun SmartCookScreen(
 
         NavHost(
             navController = navController,
-            startDestination = BottomBarScreen.Home.route,
+            startDestination = "auth",
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -211,13 +232,73 @@ fun SmartCookScreen(
                 route = "auth"
             ){
                 composable(route = Screen.Login.route){
-                    LoginScreen()
+
+                    val uiState by authViewModel.loginstate.collectAsState()
+
+                    LaunchedEffect(uiState.isSuccess) {
+                        if (uiState.isSuccess) {
+                            navController.navigate(Screen.Home.route){
+                                popUpTo("auth") { inclusive = true }
+                            }
+                            authViewModel.resetStates()
+                        }
+                    }
+
+                    LoginScreen(
+                        viewModel = authViewModel,
+                        onLoginClick = {email, password ->
+                             authViewModel.login(email,password)},
+
+                        onLoginSucess = {
+                            navController.navigate(Screen.Home.route){
+                                popUpTo("auth") { inclusive = true }
+                            }
+                        },
+                        onForgotPasswordClick = { navController.navigate(Screen.ForgetPassword.route)},
+                        onSignUpClick = { navController.navigate(Screen.Registration.route)}
+                    )
                 }
                 composable(route = Screen.Registration.route){
-                    RegistrationScreen()
+                    val uiState by authViewModel.registerstate.collectAsState()
+                    
+                    LaunchedEffect(uiState.isSuccess) {
+                        if (uiState.isSuccess) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo("auth") { inclusive = true }
+                            }
+                            authViewModel.resetStates()
+                        }
+                    }
+
+///
+                    RegistrationScreen(
+                        viewModel = authViewModel,
+                        onSignUpClick = { name, email, password ->
+                            authViewModel.register(name, email, password)
+                        },
+                        onGoogleSignUpClick = { },
+                        onLoginClick = { navController.navigate(Screen.Login.route) }
+                    )
                 }
                 composable(route = Screen.ForgetPassword.route) {
-                    ForgetScreen()
+                    val uiState by authViewModel.resetstate.collectAsState()
+
+                    LaunchedEffect(uiState.isSuccess) {
+                        if (uiState.isSuccess) {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.ForgetPassword.route) { inclusive = true }
+                            }
+                            authViewModel.resetStates()
+                        }
+                    }
+
+                    ForgetScreen(
+                        viewModel = authViewModel,
+                        onSendResetLinkClick = { email ->
+                           authViewModel.forgetPassword(email.trim())
+                        },
+                        onBackToLoginClick = { navController.navigate(Screen.Login.route) }
+                    )
                 }
 
             }
@@ -237,7 +318,11 @@ fun SmartCookScreen(
                 FavouriteScreen()
             }
             composable(route =BottomBarScreen.Settings.route ){
-                SettingScreen()
+                SettingScreen(viewModel = authViewModel,
+                     onLogoutSuccess = {
+                         navController.navigate(Screen.Login.route)
+                     }
+                )
             }
         }
     }
@@ -250,5 +335,3 @@ fun prev(){
         SmartCookScreen()
     }
 }
-
-
