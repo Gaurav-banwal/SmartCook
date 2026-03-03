@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,8 +45,12 @@ import com.gaurav.smartcook.ui.theme.AppTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import androidx.room.Room
+import com.gaurav.smartcook.data.local.AppDatabase
 import com.gaurav.smartcook.ui.Favourate.FavouriteScreen
 import com.gaurav.smartcook.ui.Home.HomeScreen
+import com.gaurav.smartcook.ui.Inventory.AddIngredientScreen
+import com.gaurav.smartcook.ui.Inventory.IngredientViewModel
 import com.gaurav.smartcook.ui.Inventory.InventoryScreen
 import com.gaurav.smartcook.ui.Login.ForgetScreen
 import com.gaurav.smartcook.ui.Login.LoginScreen
@@ -55,6 +60,7 @@ import com.gaurav.smartcook.ui.runrecipie.DishSelectionScreen
 import com.gaurav.smartcook.ui.runrecipie.PrerequisitScreen
 import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
 import com.gaurav.smartcook.viewmodel.AuthViewModel
+import kotlin.jvm.java
 
 
 enum class BottomBarScreen(
@@ -173,6 +179,7 @@ fun SmartCookScreen(
 
      //auth viewmodel
     val authViewModel: AuthViewModel = viewModel()
+    val IngviewModel: IngredientViewModel = viewModel()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -213,6 +220,9 @@ fun SmartCookScreen(
 
     ) {innerPadding->
 
+
+
+
         NavHost(
             navController = navController,
             startDestination = "auth",
@@ -225,7 +235,11 @@ fun SmartCookScreen(
             HomeScreen()
         }
             composable(route =BottomBarScreen.Ingredients.route ){
-               InventoryScreen()
+               InventoryScreen(
+                   onAddClickedexp = {
+                       navController.navigate(Screen.AddIngredient.route)
+                   }
+               )
             }
             navigation(
                 startDestination = Screen.Login.route,
@@ -315,13 +329,30 @@ fun SmartCookScreen(
             }
 
             composable(route =BottomBarScreen.Favorites.route ){
-                FavouriteScreen()
+                FavouriteScreen(
+
+                )
             }
             composable(route =BottomBarScreen.Settings.route ){
                 SettingScreen(viewModel = authViewModel,
                      onLogoutSuccess = {
                          navController.navigate(Screen.Login.route)
                      }
+                )
+            }
+
+            composable(route = Screen.AddIngredient.route) {
+                AddIngredientScreen(
+
+                    onBackClick = { navController.popBackStack() },
+                    onAddClick = { name, quantity ->
+                        // Add to your data source here
+                       IngviewModel.quantity = quantity.toString()
+                        IngviewModel.name = name
+                        IngviewModel.addIngredient()
+                        navController.popBackStack()
+                    },
+                    viewModel = IngviewModel
                 )
             }
         }
