@@ -1,5 +1,6 @@
 package com.gaurav.smartcook.ui.Inventory
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,11 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -31,13 +34,16 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,68 +97,82 @@ fun IngredientItem(ingredientData: ingredientData,
         shape = RoundedCornerShape(16.dp),
         tonalElevation = 10.dp
     ){
-        Row(modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start){
-            Image(
-                painter = painterResource(id = ingredientData.image),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(10.dp)
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
-            )
 
-                Text(text = ingredientData.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.weight(1f))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 2.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
             ) {
-                Text(text = "Quantity",
-                    style = MaterialTheme.typography.bodyMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                Image(
+                    painter = painterResource(id = ingredientData.image),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .padding(10.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                Text(
+                    text = ingredientData.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 2.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Remove,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
-                            .background(color = MaterialTheme.colorScheme.tertiary)
-
-                            .clickable {
-                                onDecClick(ingredientData)
-                            },
-                        contentDescription = "Subtract button to reduce items",
-                        tint = MaterialTheme.colorScheme.onSecondary
+                    Text(
+                        text = "Quantity",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    Text(text = ingredientData.Quantity.toString())
-                    Icon(imageVector = Icons.Default.Add,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
-                            .background(color = MaterialTheme.colorScheme.tertiary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
+                                .background(color = MaterialTheme.colorScheme.tertiary)
 
-                            .clickable {
-                                onIncClick(ingredientData)
-                            },
-                        contentDescription = "Add button to add items")
+                                .clickable {
+                                    onDecClick(ingredientData)
+                                },
+                            contentDescription = "Subtract button to reduce items",
+                            tint = MaterialTheme.colorScheme.onSecondary
+                        )
+                        Text(text = ingredientData.Quantity.toString())
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
+                                .background(color = MaterialTheme.colorScheme.tertiary)
+
+                                .clickable {
+                                    onIncClick(ingredientData)
+                                },
+                            contentDescription = "Add button to add items"
+                        )
+                    }
                 }
+
+
             }
 
-
         }
-    }
+
+
 }
 
 @Composable
-fun InventoryScreen() {
+fun InventoryScreen(onAddClickedexp: () -> Unit = {}) {
 
 
     // 1. Properly remember the search state
@@ -162,7 +182,16 @@ fun InventoryScreen() {
         mutableStateListOf(
             ingredientData(1, "Pizza Dough", 7, R.drawable.pizza),
             ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza),
-            ingredientData(3, "Mozzarella", 5, R.drawable.pizza)
+            ingredientData(3, "Mozzarella", 5, R.drawable.pizza),
+            ingredientData(4, "Pizza Dough", 7, R.drawable.pizza),
+            ingredientData(5, "Tomato Sauce", 2, R.drawable.pizza),
+            ingredientData(6, "Mozz", 5, R.drawable.pizza),
+            ingredientData(7, "Pizza Dough", 7, R.drawable.pizza),
+            ingredientData(8, "Tomato Sauce", 2, R.drawable.pizza),
+            ingredientData(9, "Mozz", 5, R.drawable.pizza)
+
+
+
         )
     }
 
@@ -187,15 +216,31 @@ fun InventoryScreen() {
         }
     }
 
-    Box(
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.surface),
+         floatingActionButton = {
+             var size = 60.dp
+             FloatingActionButton(
+                 onClick = {
 
-        ) {
+
+                Log.d("TAG", "InventoryScreen: Clicked")
+                 onAddClickedexp()
+                 },
+                 shape = CircleShape,
+                 modifier = Modifier.size(size),
+                 containerColor = MaterialTheme.colorScheme.primary
+             ) {
+                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+             }
+         })
+             { innerpadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerpadding)
 
         ) {
             SimpleSearchBar(
@@ -226,6 +271,7 @@ fun InventoryScreen() {
         }
     }
 }
+
 
 
 
