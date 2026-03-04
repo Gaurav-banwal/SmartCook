@@ -47,6 +47,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -59,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -67,7 +69,11 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gaurav.smartcook.R
+import com.gaurav.smartcook.data.local.AppDatabase
+import com.gaurav.smartcook.data.local.Ingredient
 import com.gaurav.smartcook.ui.Home.food
 import com.gaurav.smartcook.ui.commonui.SimpleSearchBar
 import com.gaurav.smartcook.ui.theme.AppTheme
@@ -82,10 +88,10 @@ data class ingredientData(
 )
 
 @Composable
-fun IngredientItem(ingredientData: ingredientData,
+fun IngredientItem(ingredient: Ingredient,
                    modifier: Modifier= Modifier,
-             onIncClick : (ingredientData) -> Unit = {},
-             onDecClick : (ingredientData) -> Unit = {}
+             onIncClick : (Ingredient) -> Unit = {},
+             onDecClick : (Ingredient) -> Unit = {}
 ){
 
 
@@ -106,7 +112,7 @@ fun IngredientItem(ingredientData: ingredientData,
                 horizontalArrangement = Arrangement.Start
             ) {
                 Image(
-                    painter = painterResource(id = ingredientData.image),
+                    painter = painterResource(id = ingredient.image),
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -116,7 +122,7 @@ fun IngredientItem(ingredientData: ingredientData,
                 )
 
                 Text(
-                    text = ingredientData.name,
+                    text = ingredient.name,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -143,12 +149,12 @@ fun IngredientItem(ingredientData: ingredientData,
                                 .background(color = MaterialTheme.colorScheme.tertiary)
 
                                 .clickable {
-                                    onDecClick(ingredientData)
+                                    onDecClick(ingredient)
                                 },
                             contentDescription = "Subtract button to reduce items",
                             tint = MaterialTheme.colorScheme.onSecondary
                         )
-                        Text(text = ingredientData.Quantity.toString())
+                        Text(text = ingredient.quantity.toString())
                         Icon(
                             imageVector = Icons.Default.Add,
                             modifier = Modifier
@@ -156,7 +162,7 @@ fun IngredientItem(ingredientData: ingredientData,
                                 .background(color = MaterialTheme.colorScheme.tertiary)
 
                                 .clickable {
-                                    onIncClick(ingredientData)
+                                    onIncClick(ingredient)
                                 },
                             contentDescription = "Add button to add items"
                         )
@@ -172,28 +178,36 @@ fun IngredientItem(ingredientData: ingredientData,
 }
 
 @Composable
-fun InventoryScreen(onAddClickedexp: () -> Unit = {}) {
+fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
+                    ingredientViewModel: IngredientViewModel = viewModel()) {
 
 
     // 1. Properly remember the search state
     val searchState = rememberTextFieldState()
+
+    var Dao = db.ingredientDao()
+
+
 // Mock data list
-    val allIngredients = remember {
-        mutableStateListOf(
-            ingredientData(1, "Pizza Dough", 7, R.drawable.pizza),
-            ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza),
-            ingredientData(3, "Mozzarella", 5, R.drawable.pizza),
-            ingredientData(4, "Pizza Dough", 7, R.drawable.pizza),
-            ingredientData(5, "Tomato Sauce", 2, R.drawable.pizza),
-            ingredientData(6, "Mozz", 5, R.drawable.pizza),
-            ingredientData(7, "Pizza Dough", 7, R.drawable.pizza),
-            ingredientData(8, "Tomato Sauce", 2, R.drawable.pizza),
-            ingredientData(9, "Mozz", 5, R.drawable.pizza)
+//    val allIngredients = remember {
+//        mutableStateListOf(
+//            ingredientData(1, "Pizza Dough", 7, R.drawable.pizza),
+//            ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza),
+//            ingredientData(3, "Mozzarella", 5, R.drawable.pizza),
+//            ingredientData(4, "Pizza Dough", 7, R.drawable.pizza),
+//            ingredientData(5, "Tomato Sauce", 2, R.drawable.pizza),
+//            ingredientData(6, "Mozz", 5, R.drawable.pizza),
+//            ingredientData(7, "Pizza Dough", 7, R.drawable.pizza),
+//            ingredientData(8, "Tomato Sauce", 2, R.drawable.pizza),
+//            ingredientData(9, "Mozz", 5, R.drawable.pizza)
+//
+//
+//
+//        )
+//    }
 
+    val allIngredients by ingredientViewModel.getallitem().collectAsState(initial = emptyList())
 
-
-        )
-    }
 
 
     // 2. Real-time filtering logic
@@ -204,7 +218,7 @@ fun InventoryScreen(onAddClickedexp: () -> Unit = {}) {
             }
         }
     }
-    
+
     // 3. Dynamic suggestions based on pantry items
     val suggestions by remember {
         derivedStateOf {
@@ -261,9 +275,21 @@ fun InventoryScreen(onAddClickedexp: () -> Unit = {}) {
             LazyColumn(Modifier.fillMaxSize()) {
                 items(filteredIngredients, key = { it.id }) { ingredient ->
                     IngredientItem(
-                        ingredientData = ingredient,
-                        onIncClick = { /* Update logic */ },
-                        onDecClick = { /* Update logic */ }
+                        ingredient = ingredient,
+                        onIncClick = {
+                           // Log.d("TAG", "InventoryScreen: Clicked")
+                            ingredientViewModel.quantity = (ingredient.quantity +1).toString()
+                            //show what error is there
+                            Log.e("TAG", "InventoryScreen: ${ingredientViewModel.quantity}")
+
+                            ingredientViewModel.increaseAmount(ingredient) },
+                        onDecClick = {
+                          //  ingredientViewModel.quantity = (ingredient.quantity -1).toString()
+
+                            ingredientViewModel.decreaseAmount(ingredient)
+
+
+                        }
                     )
                 }
 
@@ -280,7 +306,7 @@ fun InventoryScreen(onAddClickedexp: () -> Unit = {}) {
     fun previewInv() {
 
         AppTheme() {
-            InventoryScreen()
+            InventoryScreen(db= AppDatabase.getDatabase(LocalContext.current))
         }
 
     }

@@ -14,7 +14,15 @@ interface IngredientDao {
     fun getAllIngredients(): Flow<List<Ingredient>>
 
     @Query("SELECT * FROM Ingredient WHERE name LIKE '%' || :name || '%' ORDER BY DateModified DESC")
-    fun searchIngredients(name: String): Flow<List<Ingredient>>
+  suspend  fun searchIngredients(name: String): List<Ingredient>
+
+
+    @Query("Update Ingredient SET quantity = quantity + 1 WHERE name = :name")
+   suspend fun increaseAmount(name: String)
+
+    @Query("Update Ingredient SET quantity = quantity - 1 WHERE name = :name")
+    suspend fun DecreaseAmount(name: String)
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertIngredient(ingredient: Ingredient)
