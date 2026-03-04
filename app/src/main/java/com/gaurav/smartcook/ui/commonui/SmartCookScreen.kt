@@ -60,6 +60,7 @@ import com.gaurav.smartcook.ui.runrecipie.DishSelectionScreen
 import com.gaurav.smartcook.ui.runrecipie.PrerequisitScreen
 import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
 import com.gaurav.smartcook.viewmodel.AuthViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlin.jvm.java
 
 
@@ -181,6 +182,16 @@ fun SmartCookScreen(
     val authViewModel: AuthViewModel = viewModel()
     val IngviewModel: IngredientViewModel = viewModel()
 
+
+    var db = Room.databaseBuilder(
+        LocalContext.current,
+        AppDatabase::class.java, "ingredient_database"
+    ).build()
+
+    val dao = db.ingredientDao()
+
+
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -231,6 +242,8 @@ fun SmartCookScreen(
                 .padding(innerPadding)
         ){
 
+            authNavGraph(navController, authViewModel)
+
         composable(route =BottomBarScreen.Home.route ){
             HomeScreen()
         }
@@ -238,95 +251,16 @@ fun SmartCookScreen(
                InventoryScreen(
                    onAddClickedexp = {
                        navController.navigate(Screen.AddIngredient.route)
-                   }
+                   },
+                   db = db
                )
             }
-            navigation(
-                startDestination = Screen.Login.route,
-                route = "auth"
-            ){
-                composable(route = Screen.Login.route){
 
-                    val uiState by authViewModel.loginstate.collectAsState()
 
-                    LaunchedEffect(uiState.isSuccess) {
-                        if (uiState.isSuccess) {
-                            navController.navigate(Screen.Home.route){
-                                popUpTo("auth") { inclusive = true }
-                            }
-                            authViewModel.resetStates()
-                        }
-                    }
+            recipeNavGraph(navController)
 
-                    LoginScreen(
-                        viewModel = authViewModel,
-                        onLoginClick = {email, password ->
-                             authViewModel.login(email,password)},
 
-                        onLoginSucess = {
-                            navController.navigate(Screen.Home.route){
-                                popUpTo("auth") { inclusive = true }
-                            }
-                        },
-                        onForgotPasswordClick = { navController.navigate(Screen.ForgetPassword.route)},
-                        onSignUpClick = { navController.navigate(Screen.Registration.route)}
-                    )
-                }
-                composable(route = Screen.Registration.route){
-                    val uiState by authViewModel.registerstate.collectAsState()
-                    
-                    LaunchedEffect(uiState.isSuccess) {
-                        if (uiState.isSuccess) {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo("auth") { inclusive = true }
-                            }
-                            authViewModel.resetStates()
-                        }
-                    }
 
-///
-                    RegistrationScreen(
-                        viewModel = authViewModel,
-                        onSignUpClick = { name, email, password ->
-                            authViewModel.register(name, email, password)
-                        },
-                        onGoogleSignUpClick = { },
-                        onLoginClick = { navController.navigate(Screen.Login.route) }
-                    )
-                }
-                composable(route = Screen.ForgetPassword.route) {
-                    val uiState by authViewModel.resetstate.collectAsState()
-
-                    LaunchedEffect(uiState.isSuccess) {
-                        if (uiState.isSuccess) {
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(Screen.ForgetPassword.route) { inclusive = true }
-                            }
-                            authViewModel.resetStates()
-                        }
-                    }
-
-                    ForgetScreen(
-                        viewModel = authViewModel,
-                        onSendResetLinkClick = { email ->
-                           authViewModel.forgetPassword(email.trim())
-                        },
-                        onBackToLoginClick = { navController.navigate(Screen.Login.route) }
-                    )
-                }
-
-            }
-            navigation(startDestination = Screen.DishSelection.route, route = "recipe_wizard"){
-                composable(route = Screen.DishSelection.route){
-                    DishSelectionScreen()
-                }
-                composable(route= Screen.Prerequisites.route){
-                    PrerequisitScreen()
-                }
-                composable(route= Screen.RecipeSteps.route) {
-                     StepsScreen()
-                }
-            }
 
             composable(route =BottomBarScreen.Favorites.route ){
                 FavouriteScreen(
@@ -349,10 +283,11 @@ fun SmartCookScreen(
                         // Add to your data source here
                        IngviewModel.quantity = quantity.toString()
                         IngviewModel.name = name
+
                         IngviewModel.addIngredient()
                         navController.popBackStack()
-                    },
-                    viewModel = IngviewModel
+                    }
+
                 )
             }
         }
