@@ -195,9 +195,8 @@ fun SmartCookScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            if(backStackEntry?.destination?.route != Screen.Login.route &&
-                backStackEntry?.destination?.route != Screen.Registration.route
-                && backStackEntry?.destination?.route != Screen.ForgetPassword.route){
+            if(backStackEntry?.destination?.route == Screen.Home.route ||
+                backStackEntry?.destination?.route == Screen.Settings.route){
                 SmartCookTopBar(modifier = Modifier,
                     canNavigateBack = false,
 //                    canNavigateBack = navController.previousBackStackEntry != null
