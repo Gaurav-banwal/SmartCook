@@ -71,6 +71,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.data.local.AppDatabase
 import com.gaurav.smartcook.data.local.Ingredient
@@ -111,9 +112,13 @@ fun IngredientItem(ingredient: Ingredient,
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                Image(
-                    painter = painterResource(id = ingredient.image),
+                AsyncImage(
+                    model = ingredient.image.ifEmpty {
+                        R.drawable.pizza // Fallback to local resource if URL is empty
+                    }, // This is now the URL string
                     contentDescription = null,
+                    placeholder = painterResource(R.drawable.pizza), // Default while loading
+                    error = painterResource(R.drawable.pizza),       // Default if error
                     modifier = Modifier
                         .size(100.dp)
                         .padding(10.dp)
@@ -188,23 +193,7 @@ fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
     var Dao = db.ingredientDao()
 
 
-// Mock data list
-//    val allIngredients = remember {
-//        mutableStateListOf(
-//            ingredientData(1, "Pizza Dough", 7, R.drawable.pizza),
-//            ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza),
-//            ingredientData(3, "Mozzarella", 5, R.drawable.pizza),
-//            ingredientData(4, "Pizza Dough", 7, R.drawable.pizza),
-//            ingredientData(5, "Tomato Sauce", 2, R.drawable.pizza),
-//            ingredientData(6, "Mozz", 5, R.drawable.pizza),
-//            ingredientData(7, "Pizza Dough", 7, R.drawable.pizza),
-//            ingredientData(8, "Tomato Sauce", 2, R.drawable.pizza),
-//            ingredientData(9, "Mozz", 5, R.drawable.pizza)
-//
-//
-//
-//        )
-//    }
+
 
     val allIngredients by ingredientViewModel.getallitem().collectAsState(initial = emptyList())
 
@@ -278,7 +267,7 @@ fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
                         ingredient = ingredient,
                         onIncClick = {
                            // Log.d("TAG", "InventoryScreen: Clicked")
-                            ingredientViewModel.quantity = (ingredient.quantity +1).toString()
+                          //  ingredientViewModel.quantity = (ingredient.quantity +1).toString()
                             //show what error is there
                             Log.e("TAG", "InventoryScreen: ${ingredientViewModel.quantity}")
 
@@ -306,6 +295,24 @@ fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
     fun previewInv() {
 
         AppTheme() {
+
+//             Mock data list
+    val allIngredients = remember {
+        mutableStateListOf(
+            ingredientData(1, "Pizza Dough", 7, R.drawable.pizza),
+            ingredientData(2, "Tomato Sauce", 2, R.drawable.pizza),
+            ingredientData(3, "Mozzarella", 5, R.drawable.pizza),
+            ingredientData(4, "Pizza Dough", 7, R.drawable.pizza),
+            ingredientData(5, "Tomato Sauce", 2, R.drawable.pizza),
+            ingredientData(6, "Mozz", 5, R.drawable.pizza),
+            ingredientData(7, "Pizza Dough", 7, R.drawable.pizza),
+            ingredientData(8, "Tomato Sauce", 2, R.drawable.pizza),
+            ingredientData(9, "Mozz", 5, R.drawable.pizza)
+
+
+
+        )
+    }
             InventoryScreen(db= AppDatabase.getDatabase(LocalContext.current))
         }
 
