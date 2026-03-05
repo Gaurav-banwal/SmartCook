@@ -51,6 +51,10 @@ android {
 
 dependencies {
 
+
+
+
+
     val room_version = "2.7.0-alpha01"
 
     implementation("androidx.room:room-runtime:$room_version")
@@ -69,6 +73,10 @@ dependencies {
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+
+
+    implementation("com.google.firebase:firebase-firestore-ktx") // Best for "Smart Cook" user data
+    implementation("com.google.firebase:firebase-analytics-ktx")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 

@@ -56,6 +56,7 @@ import com.gaurav.smartcook.ui.Login.ForgetScreen
 import com.gaurav.smartcook.ui.Login.LoginScreen
 import com.gaurav.smartcook.ui.Login.RegistrationScreen
 import com.gaurav.smartcook.ui.Setting.SettingScreen
+import com.gaurav.smartcook.ui.Setting.SettingsViewModel
 import com.gaurav.smartcook.ui.runrecipie.DishSelectionScreen
 import com.gaurav.smartcook.ui.runrecipie.PrerequisitScreen
 import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
@@ -179,8 +180,10 @@ fun SmartCookScreen(
     )
 
      //auth viewmodel
-    val authViewModel: AuthViewModel = viewModel()
-    val IngviewModel: IngredientViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel<AuthViewModel>()
+    val IngviewModel: IngredientViewModel = viewModel<IngredientViewModel>()
+    val settingsViewModel = viewModel<SettingsViewModel>()
+
 
 
     var db = Room.databaseBuilder(
@@ -267,7 +270,8 @@ fun SmartCookScreen(
                 )
             }
             composable(route =BottomBarScreen.Settings.route ){
-                SettingScreen(viewModel = authViewModel,
+                SettingScreen(authviewModel = authViewModel,
+                        settingsViewModel = settingsViewModel,
                      onLogoutSuccess = {
                          navController.navigate(Screen.Login.route)
                      }
