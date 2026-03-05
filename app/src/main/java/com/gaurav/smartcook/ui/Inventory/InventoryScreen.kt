@@ -244,6 +244,11 @@ fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerpadding)
+//              .padding(start = innerpadding.calculateLeftPadding(LayoutDirection.Ltr),
+//                end = innerpadding.calculateRightPadding(LayoutDirection.Ltr),
+//                bottom = innerpadding.calculateBottomPadding(),
+//                top = innerpadding.calculateTopPadding() / 2) // Try halving it or using 0.dp
+
 
         ) {
             SimpleSearchBar(
@@ -252,7 +257,7 @@ fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
                 suggestions = suggestions,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 2.dp)
             )
             Text(
                 text = "My Pantry",
