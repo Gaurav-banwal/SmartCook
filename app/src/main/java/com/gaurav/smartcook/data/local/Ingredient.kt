@@ -10,5 +10,5 @@ data class Ingredient(
     val name: String,
     val quantity: Int,
     val dateModified: Long = System.currentTimeMillis(),
-    val image: Int
+    val image: String
 )

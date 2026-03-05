@@ -284,7 +284,9 @@ fun SmartCookScreen(
                        IngviewModel.quantity = quantity.toString()
                         IngviewModel.name = name
 
-                        IngviewModel.addIngredient()
+                        IngviewModel.addIngredientWithImage(name, quantity)
+                        IngviewModel.name = ""
+                        IngviewModel.quantity = ""
                         navController.popBackStack()
                     }
 
