@@ -264,7 +264,9 @@ fun PopularRecipeCard(recipe: Recipe) {
 
 
 @Composable
-fun HomeScreen(){
+fun HomeScreen(
+    onNewRecipeClick: (String) -> Unit = {_ ->}
+){
     val scrollstate = rememberScrollState()
     Surface(modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface,
@@ -284,20 +286,20 @@ fun HomeScreen(){
                 modifier = Modifier.size(10.dp)
             )
 
-            PopularRecipeCard(
-                recipe = Recipe(
-                    id = 3,
-                    title = "Pizza",
-                    description = "cheesy slices falling well",
-                    time = "25 min",
-                    image = R.drawable.pizza
-                )
-            )
+//            PopularRecipeCard(
+//                recipe = Recipe(
+//                    id = 3,
+//                    title = "Pizza",
+//                    description = "cheesy slices falling well",
+//                    time = "25 min",
+//                    image = R.drawable.pizza
+//                )
+//            )
 
             Spacer(modifier = Modifier.size(10.dp))
             Button(
                 onClick = {
-
+            onNewRecipeClick("AX3B")
                 },
                 modifier = Modifier.width(200.dp),
                 enabled = true,

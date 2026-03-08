@@ -55,6 +55,9 @@ dependencies {
 
 
 
+    //implementation(libs.androidx.ui)
+   // implementation(libs.androidx.compose.ui.tooling.data)
+   // implementation(libs.androidx.constraintlayout)
     val room_version = "2.7.0-alpha01"
 
     implementation("androidx.room:room-runtime:$room_version")
@@ -63,7 +66,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
 
     implementation("com.google.dagger:hilt-android:2.51.1")
-
+//
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     // Firebase BOM (manages versions)
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))

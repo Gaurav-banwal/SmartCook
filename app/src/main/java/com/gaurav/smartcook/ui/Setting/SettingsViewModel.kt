@@ -13,8 +13,10 @@ import androidx.lifecycle.ViewModel
 import com.gaurav.smartcook.data.remote.firebase.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+
 
 class SettingsViewModel(application: Application)  : AndroidViewModel(application) {
 
@@ -60,8 +62,10 @@ class SettingsViewModel(application: Application)  : AndroidViewModel(applicatio
             isLoading.value = true
 
 
-            db.collection(email)
-                .document("userdata")
+            db.collection("users")
+                .document(email)
+                .collection("userdata")
+                .document("profile")
                 .get()
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
@@ -86,8 +90,10 @@ class SettingsViewModel(application: Application)  : AndroidViewModel(applicatio
             isUpdating.value = true
 
 
-            db.collection(email)
-                .document("userdata")
+            db.collection("users")
+                .document(email)
+                .collection("userdata")
+                .document("profile")
                 .set(updatedProfile)
                 .addOnSuccessListener {
                     userProfile.value = updatedProfile

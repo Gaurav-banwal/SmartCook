@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
@@ -23,11 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -44,24 +39,20 @@ import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.theme.AppTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navigation
 import androidx.room.Room
 import com.gaurav.smartcook.data.local.AppDatabase
+import com.gaurav.smartcook.data.remote.firebase.Nutrition
+import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.ui.Favourate.FavouriteScreen
 import com.gaurav.smartcook.ui.Home.HomeScreen
 import com.gaurav.smartcook.ui.Inventory.AddIngredientScreen
 import com.gaurav.smartcook.ui.Inventory.IngredientViewModel
 import com.gaurav.smartcook.ui.Inventory.InventoryScreen
-import com.gaurav.smartcook.ui.Login.ForgetScreen
-import com.gaurav.smartcook.ui.Login.LoginScreen
-import com.gaurav.smartcook.ui.Login.RegistrationScreen
 import com.gaurav.smartcook.ui.Setting.SettingScreen
 import com.gaurav.smartcook.ui.Setting.SettingsViewModel
-import com.gaurav.smartcook.ui.runrecipie.DishSelectionScreen
-import com.gaurav.smartcook.ui.runrecipie.PrerequisitScreen
-import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
+import com.gaurav.smartcook.ui.runrecipie.RecipieSummaryScreen
+import com.gaurav.smartcook.ui.runrecipie.RecipieSummaryViewModel
 import com.gaurav.smartcook.viewmodel.AuthViewModel
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlin.jvm.java
 
 
@@ -95,6 +86,10 @@ sealed class Screen(val route: String) {
     object Login : Screen("login_screen")
     object Registration : Screen("registration_screen")
     object ForgetPassword : Screen("forget_password_screen")
+
+    object RecipieSummary : Screen("recipie_summary_screen/{recipeId}") {
+        fun createRoute(recipeId: String) = "recipie_summary_screen/$recipeId"
+    }
 
 }
 
@@ -183,6 +178,7 @@ fun SmartCookScreen(
     val authViewModel: AuthViewModel = viewModel<AuthViewModel>()
     val IngviewModel: IngredientViewModel = viewModel<IngredientViewModel>()
     val settingsViewModel = viewModel<SettingsViewModel>()
+    val recipeViewModel = viewModel<RecipieSummaryViewModel>()
 
 
 
@@ -247,8 +243,28 @@ fun SmartCookScreen(
             authNavGraph(navController, authViewModel)
 
         composable(route =BottomBarScreen.Home.route ){
-            HomeScreen()
+            HomeScreen(
+                onNewRecipeClick = {recipeId ->
+                    navController.navigate(Screen.RecipieSummary.createRoute(recipeId))
+                }
+            )
         }
+
+            composable(route = Screen.RecipieSummary.route,
+                arguments = listOf(
+                    androidx.navigation.navArgument("recipeId") {
+                        type = androidx.navigation.NavType.StringType
+                    }
+                )) {backStackEntry ->
+                val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+                RecipieSummaryScreen(
+                    recid = recipeId,
+                    recipeSViewModel = recipeViewModel,
+                    onBack = { navController.popBackStack() },
+                    onStartCook = { navController.navigate(Screen.DishSelection.route) }
+
+                )
+            }
             composable(route =BottomBarScreen.Ingredients.route ){
                InventoryScreen(
                    onAddClickedexp = {

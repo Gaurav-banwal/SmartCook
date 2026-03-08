@@ -12,7 +12,7 @@ import androidx.room.Room
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.data.local.AppDatabase
 import com.gaurav.smartcook.data.local.Ingredient
-import com.gaurav.smartcook.data.remote.spoonful.IngredientUtils
+import com.gaurav.smartcook.data.remote.spoonful.IngredientsUtil
 import com.gaurav.smartcook.data.remote.spoonful.MYAPIKEY
 import com.gaurav.smartcook.data.remote.spoonful.RetrofitClient
 import kotlinx.coroutines.Dispatchers
@@ -89,7 +89,7 @@ class IngredientViewModel(application: Application): AndroidViewModel(applicatio
 
                 // 2. Build the final URL (Step 5 logic)
                 val imageUrl = if (firstMatch != null) {
-                    IngredientUtils.getImageUrl(firstMatch.image)
+                    IngredientsUtil.getImageUrl(firstMatch.image)
                 } else {
                     "" // Placeholder or default string
                 }

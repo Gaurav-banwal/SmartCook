@@ -12,3 +12,13 @@ data class IngredientDTO(
     val name: String,
     val image: String // This is the filename, e.g., "apple.jpg"
 )
+
+data class RecipieResponse(
+    val results: List<RecipieDTO>
+)
+
+data class RecipieDTO(
+    val id: Int,
+    val title: String,
+    val image: String
+)
