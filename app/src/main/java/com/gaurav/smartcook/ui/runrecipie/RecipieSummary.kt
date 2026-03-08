@@ -44,8 +44,10 @@ fun RecipieSummaryScreen(
     var recipeImage by remember { mutableStateOf<Any>(R.drawable.pizza) }
     // FIX: Move fetch logic into LaunchedEffect
     LaunchedEffect(recid) {
-        recipeSViewModel.recid = recid
-        recipeSViewModel.fetchRecipie()
+
+        recipeSViewModel.fetchRecipie(
+            recid
+        )
     }
     val recipe = recipeSViewModel.recipie ?: RecipieFromFirebase(
         name = "Loading...",
@@ -54,7 +56,7 @@ fun RecipieSummaryScreen(
         servings = 0,
         ingredients = emptyList(),
         steps = emptyList(),
-        nutrition = Nutrition(),
+        nutritions = Nutrition(),
         allergysafe = "",
         id = ""
     )
@@ -171,7 +173,7 @@ fun RecipieSummaryScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                NutritionRow(recipe.nutrition)
+                NutritionRow(recipe.nutritions)
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -327,7 +329,7 @@ fun NutritionItem(label: String, value: String, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -341,29 +343,6 @@ fun NutritionItem(label: String, value: String, modifier: Modifier = Modifier) {
     }
 }
 
-// val recipeSamp = RecipieFromFirebase(
-//name = "Pasta Carbonara",
-//summary = "A classic Italian pasta dish made with eggs, cheese, pancetta, and black pepper.",
-//cooktime = "20 mins",
-//servings = 2,
-//ingredients = listOf("200g Spaghetti", "100g Pancetta", "2 Large Eggs", "50g Pecorino Romano"),
-//steps = listOf(
-//"Boil water in a large pot and add salt.",
-//"Cook spaghetti according to package instructions.",
-//"While pasta cooks, fry pancetta in a pan until crispy.",
-//"Whisk eggs and cheese together in a bowl.",
-//"Drain pasta, reserve some water, and toss with pancetta.",
-//"Remove from heat and quickly stir in egg mixture to create a creamy sauce."
-//),
-//nutrition = Nutrition(
-//calories = "450",
-//protein = "15g",
-//carbs = "60g",
-//fat = "20g"
-//),
-//allergysafe = "Contains Gluten, Dairy, and Eggs"
-//)
-//
 
 @Preview(showBackground = true)
 @Composable

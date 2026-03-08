@@ -4,38 +4,24 @@ import com.google.firebase.Timestamp
 import java.util.UUID
 
 data class RecipieFromFirebase(
-    val ingredients: List<String> = emptyList(),
-    val steps: List<String> = emptyList(),
-    val name: String = "",
-    val servings: Int = 0,
-    val summary: String = "",
-    val specialNoteUsed: String = "",
-    val cooktime: String = "",
-    val nutrition: Nutrition = Nutrition(),
-    val visualAnchor: String = "",
-    val allergysafe: String ="",
-    val id: String ,
-    val imageUrl: String = "",
-    val DateModified: Timestamp = Timestamp.now()
+    var ingredients: List<String> = emptyList(),
+    var steps: List<String> = emptyList(),
+    var name: String = "",
+    var servings: Int = 0,
+    var summary: String = "",
+    var specialNoteUsed: String = "",
+    var cooktime: String = "",
+    var nutritions: Nutrition = Nutrition(), // Renamed to match Firestore 'nutritions' map
+    var visualAnchor: String = "",
+    var allergysafe: String ="",
+    var id: String = "",
+    var imageUrl: String = "",
+    var DateModified: Timestamp = Timestamp.now()
 )
 
 data class Nutrition(
-    val calories: String = "",
-    val carbs: String = "",
-    val protein: String = "",
-    val fat: String = ""
+    var calories: String = "",
+    var carbs: String = "",
+    var protein: String = "",
+    var fat: String = ""
 )
-//
-//data class RecipieFromGemini(
-//    val ingredients: List<String> = emptyList(),
-//    val steps: List<String> = emptyList(),
-//    val name: String = "",
-//    val servings: Int = 0,
-//    val summary: String = "",
-//    val specialNoteUsed: String = "",
-//    val cooktime: String = "",
-//    val nutrition: Nutrition = Nutrition(),
-//    val visualAnchor: String = "",
-//    val allergysafe: String =""
-//)
-
