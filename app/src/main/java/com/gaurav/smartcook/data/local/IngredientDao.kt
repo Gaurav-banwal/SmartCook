@@ -7,11 +7,19 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
+
+
+
+
 @Dao
 interface IngredientDao {
 
     @Query("SELECT * FROM Ingredient ORDER BY DateModified DESC")
     fun getAllIngredients(): Flow<List<Ingredient>>
+
+    @Query("SELECT name,quantity,unit FROM Ingredient ORDER BY DateModified DESC")
+    fun getAllIngredientsName(): Flow<List<ingredientData>>
+
 
     @Query("SELECT * FROM Ingredient WHERE name LIKE '%' || :name || '%' ORDER BY DateModified DESC")
   suspend  fun searchIngredients(name: String): List<Ingredient>

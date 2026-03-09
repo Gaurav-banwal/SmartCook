@@ -45,6 +45,7 @@ import com.gaurav.smartcook.data.remote.firebase.Nutrition
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.ui.Favourate.FavouriteScreen
 import com.gaurav.smartcook.ui.Home.HomeScreen
+import com.gaurav.smartcook.ui.Home.HomeViewModel
 import com.gaurav.smartcook.ui.Inventory.AddIngredientScreen
 import com.gaurav.smartcook.ui.Inventory.IngredientViewModel
 import com.gaurav.smartcook.ui.Inventory.InventoryScreen
@@ -179,6 +180,7 @@ fun SmartCookScreen(
     val IngviewModel: IngredientViewModel = viewModel<IngredientViewModel>()
     val settingsViewModel = viewModel<SettingsViewModel>()
     val recipeViewModel = viewModel<RecipieSummaryViewModel>()
+    val homeViewModel = viewModel<HomeViewModel>()
 
 
 
@@ -244,6 +246,7 @@ fun SmartCookScreen(
 
         composable(route =BottomBarScreen.Home.route ){
             HomeScreen(
+                homeViewModel,
                 onNewRecipeClick = {recipeId ->
                     navController.navigate(Screen.RecipieSummary.createRoute(recipeId))
                 }
@@ -298,14 +301,15 @@ fun SmartCookScreen(
                 AddIngredientScreen(
 
                     onBackClick = { navController.popBackStack() },
-                    onAddClick = { name, quantity ->
+                    onAddClick = { name, quantity,unit ->
                         // Add to your data source here
                        IngviewModel.quantity = quantity.toString()
                         IngviewModel.name = name
-
-                        IngviewModel.addIngredientWithImage(name, quantity)
+                         IngviewModel.unit = unit
+                        IngviewModel.addIngredientWithImage(name, quantity,unit)
                         IngviewModel.name = ""
                         IngviewModel.quantity = ""
+                        IngviewModel.unit = ""
                         navController.popBackStack()
                     }
 

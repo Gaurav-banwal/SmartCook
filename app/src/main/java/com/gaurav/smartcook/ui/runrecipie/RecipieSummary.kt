@@ -65,10 +65,8 @@ fun RecipieSummaryScreen(
 
 
     LaunchedEffect(recipe.name) {
-        recipeImage = if (recipe.imageUrl.isNotEmpty()) {
-            recipe.imageUrl
-        } else {
-            IngredientsUtil.getImageForRecipe(recipe.name)
+        recipeImage = recipe.imageUrl.ifEmpty {
+            IngredientsUtil.getImageForRecipe(recipe.visualAnchor)
         }
     }
 

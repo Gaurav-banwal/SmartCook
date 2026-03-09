@@ -5,9 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
 
 class RecipieSummaryViewModel: ViewModel() {
 

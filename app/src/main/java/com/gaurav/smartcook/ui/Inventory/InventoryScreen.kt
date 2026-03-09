@@ -172,6 +172,12 @@ fun IngredientItem(ingredient: Ingredient,
                             contentDescription = "Add button to add items"
                         )
                     }
+
+
+                    Text(
+                        text = "Unit ${ingredient.unit}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
 
 

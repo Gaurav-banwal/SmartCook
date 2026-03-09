@@ -11,11 +11,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import com.gaurav.smartcook.data.remote.firebase.UserProfile
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 
 
 class SettingsViewModel(application: Application)  : AndroidViewModel(application) {
