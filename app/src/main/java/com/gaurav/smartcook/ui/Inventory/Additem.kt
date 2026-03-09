@@ -1,5 +1,6 @@
 package com.gaurav.smartcook.ui.Inventory
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -7,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,17 +18,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.ui.theme.AppTheme
-import com.gaurav.smartcook.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddIngredientScreen(
-
     onBackClick: () -> Unit = {},
-    onAddClick: (String, Int) -> Unit = { _, _ -> }
+    onAddClick: (String, Int, String) -> Unit = { _, _, _ -> }
 ) {
     var name by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
+    var unit by remember { mutableStateOf("pcs") }
+    var expanded by remember { mutableStateOf(false) }
+
+    val units = listOf("pcs", "kg", "g", "l", "ml", "oz", "lb", "cup", "tbsp", "tsp")
 
     Scaffold(
         topBar = {
@@ -67,30 +71,65 @@ fun AddIngredientScreen(
                 singleLine = true
             )
 
-            OutlinedTextField(
-                value = quantity,
-                onValueChange = { 
-                    if (it.isEmpty() || it.all { char -> char.isDigit() }) {
-                        quantity = it
-                    }
-                },
-                label = { Text("Quantity") },
-                placeholder = { Text("0") },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                leadingIcon = {
-                    Icon(Icons.Default.Scale, contentDescription = null)
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { 
+                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                            quantity = it
+                        }
+                    },
+                    label = { Text("Quantity") },
+                    placeholder = { Text("0") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = {
+                        Icon(Icons.Default.Scale, contentDescription = null)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+
+                Box(modifier = Modifier.weight(0.6f)) {
+                    OutlinedTextField(
+                        value = unit,
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Unit") },
+                        trailingIcon = {
+                            Icon(Icons.Default.UnfoldMore, contentDescription = null, 
+                                modifier = Modifier.clickable { expanded = true })
+                        },
+                        modifier = Modifier.fillMaxWidth().clickable { expanded = true },
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth(0.4f)
+                    ) {
+                        units.forEach { selection ->
+                            DropdownMenuItem(
+                                text = { Text(selection) },
+                                onClick = {
+                                    unit = selection
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     if (name.isNotBlank() && quantity.isNotEmpty()) {
-                        onAddClick(name, quantity.toInt())
+                        onAddClick(name, quantity.toInt(), unit)
                     }
                 },
                 modifier = Modifier

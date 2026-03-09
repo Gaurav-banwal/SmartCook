@@ -1,5 +1,6 @@
 package com.gaurav.smartcook.ui.Home
 
+import android.app.Application
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,13 +28,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,9 +51,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.gaurav.smartcook.R
+import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
+import com.gaurav.smartcook.data.remote.spoonful.IngredientsUtil
 import com.gaurav.smartcook.ui.commonui.FoodItem
+import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.text.ifEmpty
 
 
 data class food(
@@ -66,7 +76,7 @@ data class Recipe(
     val description: String,
 
     val time: String,
-    val image: Int
+    val image: Any
 )
 
 val list = listOf<food>(
@@ -193,7 +203,7 @@ fun OnGoing(modifier: Modifier = Modifier
 
 
 @Composable
-fun PopularRecipeCard(recipe: Recipe) {
+fun PopularRecipeCard(recipe: RecipieFromFirebase) {
     Card(
         modifier = Modifier
             .width(300.dp)
@@ -202,13 +212,18 @@ fun PopularRecipeCard(recipe: Recipe) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = recipe.image),
+
+            val scope = rememberCoroutineScope()
+            AsyncImage(
+                model =recipe.imageUrl,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                placeholder = painterResource(R.drawable.pizza), // Default while loading
+                error = painterResource(R.drawable.pizza),       // Default if error
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
-
             // Gradient overlay for text readability
             Box(
                 modifier = Modifier
@@ -229,14 +244,14 @@ fun PopularRecipeCard(recipe: Recipe) {
 
 
                 Text(
-                    text = recipe.title,
+                    text = recipe.name,
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = recipe.description,
+                    text = recipe.summary,
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Medium
@@ -250,7 +265,7 @@ fun PopularRecipeCard(recipe: Recipe) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${recipe.time}",
+                        text = "${recipe.cooktime}",
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -265,6 +280,7 @@ fun PopularRecipeCard(recipe: Recipe) {
 
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel ,
     onNewRecipeClick: (String) -> Unit = {_ ->}
 ){
     val scrollstate = rememberScrollState()
@@ -272,6 +288,11 @@ fun HomeScreen(
         color = MaterialTheme.colorScheme.surface,
 
     ) {
+
+        LaunchedEffect(Unit) {
+            viewModel.fetchResToday()
+            viewModel.fetchUserDetail()
+        }
 
         Column(
             modifier = Modifier
@@ -285,21 +306,33 @@ fun HomeScreen(
             Spacer(
                 modifier = Modifier.size(10.dp)
             )
-
-//            PopularRecipeCard(
-//                recipe = Recipe(
-//                    id = 3,
-//                    title = "Pizza",
-//                    description = "cheesy slices falling well",
-//                    time = "25 min",
-//                    image = R.drawable.pizza
-//                )
-//            )
+            
+            // FIX: Check for null before rendering PopularRecipeCard
+            viewModel.recipie?.let { recipe ->
+                PopularRecipeCard(recipe = recipe)
+            } ?: run {
+                // Show a loading indicator while data is being fetched
+                Box(
+                    modifier = Modifier
+                        .width(300.dp)
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
 
             Spacer(modifier = Modifier.size(10.dp))
+            val scope = rememberCoroutineScope()
             Button(
                 onClick = {
-            onNewRecipeClick("AX3B")
+                    scope.launch {
+                        val generatedResult = viewModel.generateSmartCookRecipe()
+                        if (generatedResult != null) {
+                            viewModel.TransferTofirestore(generatedResult)
+                        }
+                        onNewRecipeClick(viewModel.idforpass)
+                    }
                 },
                 modifier = Modifier.width(200.dp),
                 enabled = true,
@@ -353,5 +386,7 @@ fun HomeScreen(
 @Preview()
 @Composable
 fun prevHomeScreen(){
-    HomeScreen()
+    HomeScreen(
+        viewModel = viewModel()
+    )
 }

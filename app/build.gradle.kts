@@ -6,7 +6,7 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.devtools.ksp")
-
+    kotlin("plugin.serialization")
 }
 //kjbkhj
 //
@@ -55,9 +55,7 @@ dependencies {
 
 
 
-    //implementation(libs.androidx.ui)
-   // implementation(libs.androidx.compose.ui.tooling.data)
-   // implementation(libs.androidx.constraintlayout)
+    implementation(libs.firebase.ai)
     val room_version = "2.7.0-alpha01"
 
     implementation("androidx.room:room-runtime:$room_version")
@@ -69,7 +67,7 @@ dependencies {
 //
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     // Firebase BOM (manages versions)
-    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
 
     // Firebase Auth
     implementation("com.google.firebase:firebase-auth")
@@ -78,8 +76,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.0.0")
 
 
-    implementation("com.google.firebase:firebase-firestore-ktx") // Best for "Smart Cook" user data
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-analytics")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
@@ -91,8 +89,9 @@ dependencies {
 
     // Coil for Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.google.firebase:firebase-ai")
 
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
