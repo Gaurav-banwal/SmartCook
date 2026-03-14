@@ -10,6 +10,7 @@ import com.gaurav.smartcook.data.local.AppDatabase
 import com.gaurav.smartcook.data.remote.firebase.Nutrition
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromGemini
+import com.gaurav.smartcook.data.remote.spoonful.IngredientsUtil
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.ai.ai
@@ -25,13 +26,7 @@ import java.util.Locale
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
-data class userPref(
-    var ingredients: String = "",
-    var allergyInfo: String = "",
-    var diet: String = "",
-    var neededNote: String = "",
-    var specialNote: String = ""
-)
+
 
 class HomeViewModel(application: Application): AndroidViewModel(application){
 
@@ -42,6 +37,7 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
     
     var recipie by mutableStateOf<RecipieFromFirebase?>(null)
     var recipeInput by mutableStateOf<userPref?>(null)
+    var previousRecipies by mutableStateOf<List<prevRecipie>>(emptyList())
 
     var idforpass by mutableStateOf("")
 
@@ -51,37 +47,50 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
         .build()
 
     val chefSystemInstruction = """
-    ROLE: Senior Culinary Architect.
-    GOAL: Create a professional recipe by SELECTING a logical subset (3-5 primary items) from provided ingredients.
-    CONSTRAINTS: 
-    - IGNORE unrelated ingredients. 
-    - NEUTRAL ALLERGY PROTOCOL: Never use items from [USER_ALLERGIES].
-    - Assume pantry staples (Water, Salt, Sugar, Oil, Indian spices).
-    - visualAnchor must be a generic common dish name for image matching.
-    - MEAL TIMING: Adjust the portion size and "heaviness" based on the [CURRENT_TIME].
-    - OUTPUT: Return ONLY raw JSON matching this EXACT schema.
-    
-    CRITICAL: The "ingredients" field MUST be a simple list of strings (e.g., ["1 cup Chicken", "2 tsp Salt"]). 
-    DO NOT use objects for ingredients.
-    
-    Schema:
-    {
-      "ingredients": ["string", "string"],
-      "steps": ["string", "string"],
-      "name": "string",
-      "servings": 0,
-      "summary": "string",
-      "specialNoteUsed": "string",
-      "cooktime": "string",
-      "nutritions": {
-        "calories": "string",
-        "carbs": "string",
-        "protein": "string",
-        "fat": "string"
-      },
-      "visualAnchor": "string",
-      "allergysafe": "string"
-    }
+  ROLE: Senior Culinary Architect.
+  GOAL: Create a professional, balanced recipe for EXACTLY [SERVE_SIZE] people.
+
+  ### CRITICAL LOGIC & RATIOS:
+  1. **SCALING OVER UTILIZATION:** You are a professional chef, not a cleaner. Do NOT use the entire quantity of an ingredient just because it is provided. 
+     - *Example:* If the user has 10kg of flour and wants 2 servings of pancakes, use "1 cup," NOT "10kg."
+     - Prioritize culinary balance. Only use what is mathematically necessary for [SERVE_SIZE].
+  2. **STEP DEPTH:** Steps must be "well-explained." Use descriptive, professional sentences (e.g., "Gently fold the dry ingredients into the wet mixture until just combined to avoid overworking the gluten"). 
+     - Minimum 4-6 detailed steps.
+  3. **INGREDIENT SELECTION:** Select 3-5 primary items. Ignore unrelated inputs. Use pantry staples (Water, Salt, Sugar, Oil, Indian spices) as needed.
+  4. **MEAL TIMING:** Adjust "heaviness" based on [CURRENT_TIME].
+  5. **NUTRITION:** Return ONLY `value + unit`. Strictly NO "approx" or "about.",(dont use term calories use only kcal)
+  6. **ALLERGY PROTOCOL:** Zero-tolerance for [USER_ALLERGIES].
+  7. Visual Anchor should be the name of the closest resembling dish from generated dish , and visual anchor should only be of 2 -3 words only
+  8. Always see the type of diet before producing result and check if recipie matches the kind of diet
+  ### OUTPUT SCHEMA (STRICT JSON):
+  {
+    "name": "string",
+    "summary": "string",
+    "ingredients": ["string", "string"],
+    "steps": [
+      "Step 1: [Detailed prep with technique...]",
+      "Step 2: [Detailed cooking with heat/timing...]",
+      "Step 3: [Detailed finishing/plating...]"
+    ],
+    "servings": [SERVE_SIZE],
+    "cooktime": "string",
+    "nutritions": {
+      "calories": "string",
+      "carbs": "string",
+      "protein": "string",
+      "fat": "string"
+    },
+    "specialNoteUsed": "string",
+    "visualAnchor": "string",
+    "allergysafe": "string"
+  }
+
+  ### FINAL SANITY CHECK:
+  - Did I use a reasonable amount of ingredients for [SERVE_SIZE]? 
+  - Is the `servings` value exactly [SERVE_SIZE]?
+  - Is the dish resembles type of user diet(eg. if user ask for veg , it shouldn't contain non vegetarian item even if present in the inventory) 
+  - Are the steps detailed enough for a beginner to follow professionally?
+  - are all above points fullfilled
 """.trimIndent()
 
     val model = Firebase.ai(backend = GenerativeBackend.googleAI())
@@ -122,6 +131,7 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
         Preferred Ingredients: ${input.ingredients}
         Allergy Information: ${input.allergyInfo}
         Diet Type Selection: ${input.diet}
+        Serve Size:  ${input.ServeSize}
         Additional Note: ${input.neededNote}
         Special Note: ${input.specialNote}
         [CURRENT_TIME]: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())}
@@ -143,9 +153,12 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
 
     //Tranferring recipie to Firestore
     ///recipie/allrecipies/Recipie/AX3B
-    fun TransferTofirestore(generatedRecipe: RecipieFromGemini){
+   suspend fun TransferTofirestore(generatedRecipe: RecipieFromGemini){
         val email = auth.currentUser?.email ?: return
 
+
+          val result = IngredientsUtil.getImageForRecipe(generatedRecipe.visualAnchor)
+          val url   = if(result is String) result else ""
 
         val recipeSet= RecipieFromFirebase(
             ingredients = generatedRecipe.ingredients,
@@ -165,11 +178,12 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
             allergysafe = generatedRecipe.allergysafe,
             DateModified = Timestamp.now(),
             id = UUID.randomUUID().toString(),
-            imageUrl = "",
+            imageUrl = url,
         )
 
         idforpass = recipeSet.id
-
+        recipie = recipeSet
+        
          db.collection("recipie")
              .document("allrecipies")
              .collection("Recipie")
@@ -177,6 +191,7 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
              .set(recipeSet)
              .addOnSuccessListener {
                  Log.d("Success","Recipe Added")
+                 transferToFirebase()
              }
              .addOnFailureListener {
                   Log.d("Failure","Recipe Not Added")
@@ -215,4 +230,138 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
             ""
         }
     }
+
+
+    fun checkAndLimitHistory() {
+        val email = auth.currentUser?.email ?: return
+        val historyRef = db.collection("users")
+            .document(email)
+            .collection("previousRecipie")
+
+        historyRef.get()
+            .addOnSuccessListener { snapshots ->
+                if (snapshots.size() > 10) {
+                    // Find the oldest document.
+                    // Ideally, you should sort by a timestamp, but for now we take the first.
+                    val oldestDoc = snapshots.documents.firstOrNull()
+                    oldestDoc?.reference?.delete()?.addOnSuccessListener {
+                        Log.d("Cleanup", "Deleted oldest recipe: ${oldestDoc.id}")
+                        fetchallpreviousRecipies() // Just refresh the list, don't re-trigger transfer!
+                    }?.addOnFailureListener {
+                        fetchallpreviousRecipies()
+                    }
+                } else {
+                    fetchallpreviousRecipies()
+                }
+            }
+            .addOnFailureListener {
+                fetchallpreviousRecipies()
+            }
+    }
+
+
+    fun transferToFirebase(){
+        val currentRecipe = recipie ?: return
+        val recipeId = currentRecipe.id.ifEmpty { idforpass }
+
+        if (recipeId.isEmpty()) {
+            Log.e("HomeViewModel", "Cannot transfer to Firebase: Recipe ID is empty")
+            return
+        }
+
+        val recipieToHistroy= prevRecipie(
+            id = recipeId,
+            name = currentRecipe.name,
+            image = currentRecipe.imageUrl,
+            cookTime = currentRecipe.cooktime,
+            isFavourite = false
+        )
+
+        db.collection("users")
+            .document(auth.currentUser?.email ?: return)
+            .collection("previousRecipie")
+            .document(recipeId)
+            .set(recipieToHistroy)
+            .addOnSuccessListener {
+                Log.d("Success","Recipe Added to History")
+                checkAndLimitHistory() // Check for cleanup after adding
+            }
+            .addOnFailureListener {
+                Log.d("Failure","Recipe Not Added to History")
+            }
+
+    }
+
+    fun fetchallpreviousRecipies() {
+        val email = auth.currentUser?.email ?: return
+        db.collection("users")
+            .document(email)
+            .collection("previousRecipie")
+            .get()
+            .addOnSuccessListener { documents ->
+                previousRecipies = documents.toObjects(prevRecipie::class.java)
+            }
+            .addOnFailureListener {
+                Log.e("HomeViewModel", "Error fetching previous recipes", it)
+            }
+    }
+
+    fun toogleFavourite(id:String) {
+        val recipie = previousRecipies.find { it.id == id } ?: return
+        val updatedRecipie = recipie.copy(isFavourite = !recipie.isFavourite)
+        if(updatedRecipie.isFavourite == true){
+            db.collection("users")
+                .document(auth.currentUser?.email ?: return)
+                .collection("favouriteRecipie")
+                .document(id)
+                .set(updatedRecipie)
+                .addOnSuccessListener {
+                    Log.d("Success", "Recipe Favorite Toggled")
+                    // Update local state after successful remote update
+                    previousRecipies = previousRecipies.map { if (it.id == id) updatedRecipie else it }
+
+
+                    updateprev(id, updatedRecipie)
+                }
+                .addOnFailureListener {
+                    Log.d("Failure", "Failed to toggle Favorite")
+                }
+
+
+        }else{
+            db.collection("users")
+                .document(auth.currentUser?.email ?: return)
+                .collection("favouriteRecipie")
+                .document(id)
+                .delete()
+                .addOnSuccessListener {
+                    Log.d("Success", "Recipe Favorite Toggled")
+                     updateprev(id, updatedRecipie)
+                }
+                .addOnFailureListener {
+                    Log.d("Failure", "Failed to toggle Favorite")
+                }
+        }
+
+
+    }
+
+    private fun updateprev(id: String, updatedRecipie: prevRecipie) {
+        val email = auth.currentUser?.email ?: return
+
+        // Update the main history collection so it stays favorited on next app launch
+        db.collection("users")
+            .document(email)
+            .collection("previousRecipie")
+            .document(id)
+            .update("isFavourite", updatedRecipie.isFavourite)
+
+        // Update the local list so the UI heart icon changes immediately
+        previousRecipies = previousRecipies.map {
+            if (it.id == id) updatedRecipie else it
+        }
+        Log.d("Success", "Favorite state synced locally and remotely")
+    }
+
+
 }

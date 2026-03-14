@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import com.gaurav.smartcook.ui.theme.AppTheme
 
@@ -78,7 +79,7 @@ fun AddIngredientScreen(
                 OutlinedTextField(
                     value = quantity,
                     onValueChange = { 
-                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                        if (it.length<=9 && it.all { char -> char.isDigit() }) {
                             quantity = it
                         }
                     },
@@ -90,7 +91,8 @@ fun AddIngredientScreen(
                         Icon(Icons.Default.Scale, contentDescription = null)
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+                    singleLine = true,
+
                 )
 
                 Box(modifier = Modifier.weight(0.6f)) {

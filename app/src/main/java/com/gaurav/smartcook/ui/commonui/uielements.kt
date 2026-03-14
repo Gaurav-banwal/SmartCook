@@ -46,19 +46,17 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.Home.food
+import com.gaurav.smartcook.ui.Home.prevRecipie
 
 
 @Composable
-fun FoodItem(food: food,modifier: Modifier= Modifier,
-             onItemClick: (food) -> Unit = {},
-             onFavouriteClick: (food) -> Unit = {},
-             toshow: Boolean = true){
-    var likeness by rememberSaveable {
-        mutableStateOf(food.favourite)
-    }
+fun FoodItem(food: prevRecipie, modifier: Modifier= Modifier,
+             onItemClick: (String) -> Unit = {}){
 
     Surface(
         modifier = modifier
@@ -72,50 +70,114 @@ fun FoodItem(food: food,modifier: Modifier= Modifier,
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start){
-            Image(
-                painter = painterResource(id = food.image),
+
+            AsyncImage(
                 contentDescription = null,
                 modifier = Modifier
                     .size(100.dp)
                     .padding(10.dp)
                     .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                model = food.image,
+                error = painterResource(R.drawable.pizza),
             )
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Column(modifier = Modifier,
+                verticalArrangement = Arrangement.Center) {
                 Text(
                     text = food.name,
+                    modifier = Modifier
+                        .weight(1f),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Text(
-                    text = food.time,
+                    text = food.cookTime,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                )
+            }
+
+
+
+
+        }
+    }
+}
+
+
+@Composable
+fun HistoryRecipie(previousReipie: prevRecipie, modifier: Modifier= Modifier,
+                   onItemClick: (String) -> Unit = {},
+                   onFavouriteClick: (String) -> Unit = {}){
+
+    var likeness by rememberSaveable { mutableStateOf(previousReipie.isFavourite)
+    }
+
+    Surface(
+        modifier = modifier
+            .height(110.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 15.dp, vertical = 0.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .4f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 2.dp,
+        onClick = { onItemClick(previousReipie.id) }
+    ){
+        Row(modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start){
+            AsyncImage(
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Crop,
+                model = previousReipie.image,
+                error = painterResource(R.drawable.pizza),
+//                onLoading = TODO(),
+//                onError = TODO(),
+                alignment = Alignment.Center
+            )
+            Column(modifier = Modifier.padding(vertical = 8.dp).weight(1f)) {
+                Text(
+                    text = previousReipie.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = previousReipie.cookTime,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            if(toshow){
                 val imageVector: ImageVector = if (likeness) Icons.Default.Favorite else Icons.Default.FavoriteBorder
                 Icon(
                     imageVector = imageVector,
                     modifier = Modifier.padding(15.dp)
                         .size(30.dp)
                         .clickable{
-
                             likeness = !likeness
-                            onFavouriteClick(food)
+                            onFavouriteClick(previousReipie.id)
                         },
                     contentDescription = null,
                     tint = if (likeness) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
 
                 )
-            }
+
 
 
         }
     }
 }
+
 
 
 
