@@ -16,7 +16,7 @@ object IngredientsUtil {
     suspend fun getImageForRecipe(recipeName: String): Any {
         return try {
             val response = RetrofitClient.api.searchRecipes(recipeName, 1, MYAPIKEY)
-            response.results.firstOrNull()?.image ?: R.drawable.pizza
+            response.results.firstOrNull()?.image ?: ""
         } catch (e: Exception) {
             R.drawable.pizza
         }

@@ -57,6 +57,7 @@ import com.gaurav.smartcook.R
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.data.remote.spoonful.IngredientsUtil
 import com.gaurav.smartcook.ui.commonui.FoodItem
+import com.gaurav.smartcook.ui.commonui.HistoryRecipie
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import kotlin.text.ifEmpty
@@ -224,7 +225,7 @@ fun PopularRecipeCard(recipe: RecipieFromFirebase) {
                     .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
-            // Gradient overlay for text readability
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -281,9 +282,13 @@ fun PopularRecipeCard(recipe: RecipieFromFirebase) {
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel ,
-    onNewRecipeClick: (String) -> Unit = {_ ->}
+    onNewRecipeClick:() -> Unit,
+    onRecipeClick: (String) -> Unit,
+    onFavouriteClick: (String) -> Unit
 ){
     val scrollstate = rememberScrollState()
+
+
     Surface(modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface,
 
@@ -292,6 +297,7 @@ fun HomeScreen(
         LaunchedEffect(Unit) {
             viewModel.fetchResToday()
             viewModel.fetchUserDetail()
+            viewModel.fetchallpreviousRecipies()
         }
 
         Column(
@@ -307,7 +313,7 @@ fun HomeScreen(
                 modifier = Modifier.size(10.dp)
             )
             
-            // FIX: Check for null before rendering PopularRecipeCard
+
             viewModel.recipie?.let { recipe ->
                 PopularRecipeCard(recipe = recipe)
             } ?: run {
@@ -327,11 +333,7 @@ fun HomeScreen(
             Button(
                 onClick = {
                     scope.launch {
-                        val generatedResult = viewModel.generateSmartCookRecipe()
-                        if (generatedResult != null) {
-                            viewModel.TransferTofirestore(generatedResult)
-                        }
-                        onNewRecipeClick(viewModel.idforpass)
+                        onNewRecipeClick()
                     }
                 },
                 modifier = Modifier.width(200.dp),
@@ -359,8 +361,17 @@ fun HomeScreen(
                     .padding(bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                list.forEach { item ->
-                    FoodItem(item)
+                viewModel.previousRecipies.take(10).forEach { item ->
+                    HistoryRecipie(
+                        previousReipie = item,
+                        onItemClick = {id ->
+                            onRecipeClick(id)
+                        },
+                        onFavouriteClick = {id ->
+                            onFavouriteClick(id)
+                        }
+
+                    )
                 }
             }
         }
@@ -383,10 +394,13 @@ fun HomeScreen(
 //    OnGoing()
 //}
 //
-@Preview()
-@Composable
-fun prevHomeScreen(){
-    HomeScreen(
-        viewModel = viewModel()
-    )
-}
+//@Preview()
+//@Composable
+//fun prevHomeScreen(){
+//    HomeScreen(
+//        viewModel = viewModel(),
+//        onNewRecipeClick = {
+//
+//        }
+//    )
+//}

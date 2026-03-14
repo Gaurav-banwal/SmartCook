@@ -12,6 +12,9 @@ import com.gaurav.smartcook.data.remote.spoonful.IngredientsUtil
 import com.gaurav.smartcook.data.remote.spoonful.MYAPIKEY
 import com.gaurav.smartcook.data.remote.spoonful.RetrofitClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 
@@ -19,10 +22,14 @@ class IngredientViewModel(application: Application): AndroidViewModel(applicatio
 
     var name by mutableStateOf("")
     var quantity by mutableStateOf("")
-    var unit by mutableStateOf("") // Added unit state
+    var unit by mutableStateOf("")
     
     private val db = AppDatabase.getDatabase(application)
     val Dao = db.ingredientDao()
+
+    // Expose ingredients as a StateFlow for better state management
+    val ingredients: StateFlow<List<Ingredient>> = Dao.getAllIngredients()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addIngredient() {
         viewModelScope.launch {
@@ -32,7 +39,7 @@ class IngredientViewModel(application: Application): AndroidViewModel(applicatio
                     name = name,
                     quantity = quantity.toIntOrNull() ?: 0,
                     image = "",
-                    unit = unit // Use the unit state
+                    unit = unit
                 )
             )
             name = ""
@@ -41,11 +48,13 @@ class IngredientViewModel(application: Application): AndroidViewModel(applicatio
         }
     }
     
+    // Kept for backward compatibility if needed, but prefer 'ingredients' property
     fun getallitem() = Dao.getAllIngredients()
 
     fun increaseAmount(ingredient: Ingredient) {
         viewModelScope.launch(Dispatchers.IO) {
-            Dao.increaseAmount(ingredient.name)
+            if (ingredient.quantity < 999999)
+                Dao.increaseAmount(ingredient.name)
         }
     }
 
@@ -59,7 +68,7 @@ class IngredientViewModel(application: Application): AndroidViewModel(applicatio
     }
 
     fun deleteIngredient(ingredient: Ingredient) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             Dao.deleteIngredient(ingredient)
         }
     }
@@ -69,26 +78,21 @@ class IngredientViewModel(application: Application): AndroidViewModel(applicatio
     fun addIngredientWithImage(name: String, qty: Int, unit: String = "") {
         viewModelScope.launch {
             try {
-                // 1. Fetch from Spoonacular
                 val response = RetrofitClient.api.searchIngredients(name, 1, apiKey)
                 val firstMatch = response.results.firstOrNull()
-
-                // 2. Build the final URL
                 val imageUrl = if (firstMatch != null) {
                     IngredientsUtil.getImageUrl(firstMatch.image)
                 } else {
                     "" 
                 }
 
-                // 3. Save to Room
                 Dao.insertIngredient(Ingredient(
                     name = name, 
                     quantity = qty, 
                     image = imageUrl,
-                    unit = unit // Pass the unit here
+                    unit = unit
                 ))
             } catch (e: Exception) {
-                // Fallback if network fails
                 Dao.insertIngredient(Ingredient(
                     name = name, 
                     quantity = qty, 

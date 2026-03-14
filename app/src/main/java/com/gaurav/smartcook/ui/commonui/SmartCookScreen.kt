@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,17 +34,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.ui.theme.AppTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.room.Room
 import com.gaurav.smartcook.data.local.AppDatabase
 import com.gaurav.smartcook.data.remote.firebase.Nutrition
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.ui.Favourate.FavouriteScreen
+import com.gaurav.smartcook.ui.Favourate.FavouriteViewModel
 import com.gaurav.smartcook.ui.Home.HomeScreen
 import com.gaurav.smartcook.ui.Home.HomeViewModel
 import com.gaurav.smartcook.ui.Inventory.AddIngredientScreen
@@ -54,6 +58,7 @@ import com.gaurav.smartcook.ui.Setting.SettingsViewModel
 import com.gaurav.smartcook.ui.runrecipie.RecipieSummaryScreen
 import com.gaurav.smartcook.ui.runrecipie.RecipieSummaryViewModel
 import com.gaurav.smartcook.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 import kotlin.jvm.java
 
 
@@ -181,6 +186,8 @@ fun SmartCookScreen(
     val settingsViewModel = viewModel<SettingsViewModel>()
     val recipeViewModel = viewModel<RecipieSummaryViewModel>()
     val homeViewModel = viewModel<HomeViewModel>()
+    val favouriteViewModel = viewModel<FavouriteViewModel>()
+
 
 
 
@@ -245,18 +252,34 @@ fun SmartCookScreen(
             authNavGraph(navController, authViewModel)
 
         composable(route =BottomBarScreen.Home.route ){
+            val scope = rememberCoroutineScope()
             HomeScreen(
                 homeViewModel,
-                onNewRecipeClick = {recipeId ->
-                    navController.navigate(Screen.RecipieSummary.createRoute(recipeId))
+                onNewRecipeClick = {
+                    scope.launch {
+                        val generatedResult = homeViewModel.generateSmartCookRecipe()
+                        if (generatedResult != null) {
+                            homeViewModel.TransferTofirestore(generatedResult)
+                        }
+                        homeViewModel.transferToFirebase()
+                        navController.navigate(Screen.RecipieSummary.createRoute(homeViewModel.idforpass))
+
+                    }
+
+                },
+                onRecipeClick = {id ->
+                    navController.navigate(Screen.RecipieSummary.createRoute(id))
+                },
+                onFavouriteClick = {id ->
+                    homeViewModel.toogleFavourite(id)
                 }
             )
         }
 
             composable(route = Screen.RecipieSummary.route,
                 arguments = listOf(
-                    androidx.navigation.navArgument("recipeId") {
-                        type = androidx.navigation.NavType.StringType
+                    navArgument("recipeId") {
+                        type = NavType.StringType
                     }
                 )) {backStackEntry ->
                 val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
@@ -285,7 +308,11 @@ fun SmartCookScreen(
 
             composable(route =BottomBarScreen.Favorites.route ){
                 FavouriteScreen(
+                    onItemClick = { id->
+                        navController.navigate(Screen.RecipieSummary.createRoute(id))
 
+                    },
+                    viewModel = favouriteViewModel
                 )
             }
             composable(route =BottomBarScreen.Settings.route ){

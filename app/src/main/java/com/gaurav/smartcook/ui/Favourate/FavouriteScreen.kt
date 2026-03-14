@@ -1,5 +1,10 @@
 package com.gaurav.smartcook.ui.Favourate
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,119 +14,219 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.gaurav.smartcook.R
-import com.gaurav.smartcook.ui.Home.food
-import com.gaurav.smartcook.ui.Inventory.IngredientItem
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.gaurav.smartcook.data.local.Ingredient
+import com.gaurav.smartcook.ui.Home.prevRecipie
 import com.gaurav.smartcook.ui.commonui.FoodItem
+import com.gaurav.smartcook.ui.commonui.Screen
 import com.gaurav.smartcook.ui.commonui.SimpleSearchBar
 import com.gaurav.smartcook.ui.theme.AppTheme
 
 
-val list = listOf<food>(
-    food(1,"Pizza","30 mins", R.drawable.pizza, favourite = false),
-    food(2,"pasta1","20 mins", R.drawable.pasta1, favourite = true),
-    food(3,"pasta2","20 mins", R.drawable.pasta2, favourite = false),
-    food(4,"pasta3","20 mins", R.drawable.pasta3, favourite = false),
-    food(5,"pasta4","20 mins", R.drawable.pasta4, favourite = false)
-)
+
 @Composable
-fun FavouriteScreen() {
+fun FavouriteScreen(
+    modifier: Modifier = Modifier,
+    onItemClick: (String) -> Unit = { _->},
+    viewModel: FavouriteViewModel = viewModel()
+) {
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchFavourites()
+    }
+
+    val searchState = rememberTextFieldState()
+    var showDialog by remember { mutableStateOf(false) }
+    var favouritetoBeRemoved by remember { mutableStateOf<prevRecipie?>(null) }
+
+
+    if (showDialog && favouritetoBeRemoved != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+               favouritetoBeRemoved = null
+            },
+            title = { Text("Delete Ingredient") },
+            text = { Text("Are you sure you want to delete '${favouritetoBeRemoved?.name}' from your pantry?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        favouritetoBeRemoved?.let {
+                            viewModel.removefromFavourite(it.id)
+                        }
+                        showDialog = false
+                        favouritetoBeRemoved = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                       favouritetoBeRemoved= null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-
-
-        // 1. Properly remember the search state
-        val searchState = rememberTextFieldState()
-
-        // Mock data list
-        val allIngredients = remember {
-            list
-        }
-// 2. Real-time filtering logic
+        // Correctly use derivedStateOf to track changes in viewModel.favourites
         val filteredIngredients by remember {
             derivedStateOf {
-                allIngredients.filter {
+                viewModel.favourites.filter {
                     it.name.contains(searchState.text, ignoreCase = true)
                 }
             }
         }
 
-        // 3. Dynamic suggestions based on pantry items
         val suggestions by remember {
             derivedStateOf {
                 if (searchState.text.isEmpty()) emptyList()
-                else allIngredients
+                else viewModel.favourites
                     .map { it.name }
                     .filter { it.contains(searchState.text, ignoreCase = true) }
                     .take(5)
             }
         }
 
-
-
         Box( modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.surface),
         ) {
-            Column() {
-                SimpleSearchBar(
-                    textFieldState = searchState,
-                    onSearch = { },
-                    suggestions = suggestions,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+            if (viewModel.isLoading && viewModel.favourites.isEmpty()) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
                 )
-
+            } else if (viewModel.favourites.isEmpty() && !viewModel.isLoading) {
                 Text(
-                    text = "My Favourite",
+                    text = "No favourites found",
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
+                    modifier = Modifier.align(Alignment.Center)
                 )
+            } else {
+                Column {
+                    SimpleSearchBar(
+                        textFieldState = searchState,
+                        onSearch = { },
+                        suggestions = suggestions,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
 
-                LazyColumn(Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    Text(
+                        text = "My Favourite",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
+                    )
+
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                    items(filteredIngredients, key = { it.id }) { ingredient ->
-                        FoodItem(
-                            food = ingredient,
-                            modifier = Modifier,
-                            onItemClick = { },
-                            onFavouriteClick = { },
-                            toshow = false
-                        )
-                    }
+                        items(filteredIngredients, key = { it.id }) { favourite ->
+                            val dismissState = rememberSwipeToDismissBoxState(
+                                confirmValueChange = { dismissValue ->
+                                    if (dismissValue != SwipeToDismissBoxValue.Settled) {
 
+                                        showDialog = true
+                                        favouritetoBeRemoved = favourite
+                                     //   viewModel.removefromFavourite(ingredient.id)
+                                        false
+                                    } else {
+
+                                        false
+                                    }
+                                },
+                                positionalThreshold = { distance -> distance * 0.7f }
+
+
+                            )
+
+                            SwipeToDismissBox(
+                                state = dismissState,
+                                backgroundContent = {
+                                    val color = if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) {
+                                        MaterialTheme.colorScheme.errorContainer
+                                    } else Color.Transparent
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(color)
+                                            .padding(horizontal = 20.dp),
+                                        contentAlignment = if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd)
+                                            Alignment.CenterStart else Alignment.CenterEnd
+                                    ) {
+                                        if(dismissState.targetValue != SwipeToDismissBoxValue.Settled)
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            contentDescription = "Delete"
+                                        )
+                                    }
+                                }){
+                                FoodItem(
+                                    food = favourite,
+                                    onItemClick = {
+                                        onItemClick(favourite.id)
+                                    }
+                                )
+                               }
+
+
+                        }
+
+                    }
+                    }
                 }
             }
-
-        }
-
         }
     }
+
 
 
 @Preview
 @Composable
 fun prevFav(){
-    AppTheme() {
+    AppTheme {
         FavouriteScreen()
-
     }
-
 }
