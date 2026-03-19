@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 /**
  * UI State for Authentication operations
@@ -28,8 +30,9 @@ data class AuthUiState(
     val isSuccess: Boolean = false
 )
 
-class AuthViewModel(
-    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
     // Login State

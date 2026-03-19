@@ -7,14 +7,21 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.gaurav.smartcook.ui.Home.prevRecipie
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class FavouriteViewModel: ViewModel(){
+@HiltViewModel
+class FavouriteViewModel @Inject constructor(
+    private val db: FirebaseFirestore,
+    private val auth: FirebaseAuth
+): ViewModel(){
 
 
-    private val db = Firebase.firestore
-    private val auth = auth()
+
 
     var isLoading by mutableStateOf(false)
     private set

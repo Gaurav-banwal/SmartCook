@@ -61,6 +61,7 @@ import com.gaurav.smartcook.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import kotlin.jvm.java
 
+import androidx.hilt.navigation.compose.hiltViewModel
 
 enum class BottomBarScreen(
     val route: String,
@@ -181,22 +182,17 @@ fun SmartCookScreen(
     )
 
      //auth viewmodel
-    val authViewModel: AuthViewModel = viewModel<AuthViewModel>()
-    val IngviewModel: IngredientViewModel = viewModel<IngredientViewModel>()
-    val settingsViewModel = viewModel<SettingsViewModel>()
-    val recipeViewModel = viewModel<RecipieSummaryViewModel>()
-    val homeViewModel = viewModel<HomeViewModel>()
-    val favouriteViewModel = viewModel<FavouriteViewModel>()
+   // val authViewModel: AuthViewModel = hiltViewModel<AuthViewModel>()
+    val IngviewModel: IngredientViewModel = hiltViewModel<IngredientViewModel>()
+    val settingsViewModel = hiltViewModel<SettingsViewModel>()
+    val recipeViewModel = hiltViewModel<RecipieSummaryViewModel>()
+    val homeViewModel = hiltViewModel<HomeViewModel>()
+    val favouriteViewModel = hiltViewModel<FavouriteViewModel>()
 
 
 
 
-    var db = Room.databaseBuilder(
-        LocalContext.current,
-        AppDatabase::class.java, "ingredient_database"
-    ).build()
 
-    val dao = db.ingredientDao()
 
 
 
@@ -249,7 +245,7 @@ fun SmartCookScreen(
                 .padding(innerPadding)
         ){
 
-            authNavGraph(navController, authViewModel)
+            authNavGraph(navController)
 
         composable(route =BottomBarScreen.Home.route ){
             val scope = rememberCoroutineScope()
@@ -261,7 +257,8 @@ fun SmartCookScreen(
                         if (generatedResult != null) {
                             homeViewModel.TransferTofirestore(generatedResult)
                         }
-                        homeViewModel.transferToFirebase()
+                      //  homeViewModel.transferToFirebase()
+                        //homeViewModel.TransferTofirestore(generatedResult)
                         navController.navigate(Screen.RecipieSummary.createRoute(homeViewModel.idforpass))
 
                     }
@@ -295,8 +292,7 @@ fun SmartCookScreen(
                InventoryScreen(
                    onAddClickedexp = {
                        navController.navigate(Screen.AddIngredient.route)
-                   },
-                   db = db
+                   }
                )
             }
 
@@ -316,8 +312,8 @@ fun SmartCookScreen(
                 )
             }
             composable(route =BottomBarScreen.Settings.route ){
-                SettingScreen(authviewModel = authViewModel,
-                        settingsViewModel = settingsViewModel,
+                SettingScreen(authviewModel = hiltViewModel(),
+                        settingsViewModel = hiltViewModel(),
                      onLogoutSuccess = {
                          navController.navigate(Screen.Login.route)
                      }

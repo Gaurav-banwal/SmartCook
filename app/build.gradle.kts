@@ -62,8 +62,9 @@ dependencies {
 
     ksp("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
-
-    implementation("com.google.dagger:hilt-android:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    //
+   implementation("com.google.dagger:hilt-android:2.51.1")
 //
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     // Firebase BOM (manages versions)

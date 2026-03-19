@@ -6,14 +6,21 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class RecipieSummaryViewModel: ViewModel() {
+@HiltViewModel
+class RecipieSummaryViewModel @Inject constructor(
+    private val db: FirebaseFirestore,
+    private val auth: FirebaseAuth
+): ViewModel() {
 
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth
+
 
     var recipie by mutableStateOf<RecipieFromFirebase?>(null)
     var isLoading by mutableStateOf(false)
