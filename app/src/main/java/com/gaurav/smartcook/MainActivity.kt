@@ -17,8 +17,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.gaurav.smartcook.ui.commonui.SmartCookScreen
 import com.gaurav.smartcook.ui.theme.AppTheme
 import com.gaurav.smartcook.ui.theme.Nunito
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

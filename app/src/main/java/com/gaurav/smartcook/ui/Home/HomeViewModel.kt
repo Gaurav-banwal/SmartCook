@@ -6,7 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import com.gaurav.smartcook.data.local.AppDatabase
+import com.gaurav.smartcook.data.local.IngredientDao
 import com.gaurav.smartcook.data.remote.firebase.Nutrition
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromGemini
@@ -17,24 +19,32 @@ import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerationConfig
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.content
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import javax.inject.Inject
 
 
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val db : FirebaseFirestore,
+    private val auth: FirebaseAuth,
+    private val dao: IngredientDao
+): ViewModel() {
 
-class HomeViewModel(application: Application): AndroidViewModel(application){
+  //  private val db = Firebase.firestore
+  //  private val dbroom = AppDatabase.getDatabase(Application())
+   // private val dao = dbroom.ingredientDao()
+   // private val auth = Firebase.auth
 
-    private val db = Firebase.firestore
-    private val dbroom = AppDatabase.getDatabase(application)
-    private val dao = dbroom.ingredientDao()
-    private val auth = Firebase.auth
-    
     var recipie by mutableStateOf<RecipieFromFirebase?>(null)
     var recipeInput by mutableStateOf<userPref?>(null)
     var previousRecipies by mutableStateOf<List<prevRecipie>>(emptyList())
@@ -94,30 +104,31 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
 """.trimIndent()
 
     val model = Firebase.ai(backend = GenerativeBackend.googleAI())
-        .generativeModel("gemini-2.5-flash-lite", generationConfig = config,
+        .generativeModel(
+            "gemini-2.5-flash-lite", generationConfig = config,
             systemInstruction = content {
                 text(chefSystemInstruction)
             })
 
-    fun fetchUserDetail(){
+    fun fetchUserDetail() {
         val email = auth.currentUser?.email
         if (email == null) return
 
         db.collection("users")
-             .document(email)
-             .collection("userdata")
-             .document("profile")
-             .get()
-             .addOnSuccessListener { document ->
-                 if (document.exists()) {
-                     recipeInput = document.toObject(userPref::class.java)
-                 } else {
-                     recipeInput = userPref()
-                 }
-             }
-             .addOnFailureListener { 
-                 recipeInput = userPref(ingredients = "Error loading preferences")
-             }
+            .document(email)
+            .collection("userdata")
+            .document("profile")
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    recipeInput = document.toObject(userPref::class.java)
+                } else {
+                    recipeInput = userPref()
+                }
+            }
+            .addOnFailureListener {
+                recipeInput = userPref(ingredients = "Error loading preferences")
+            }
     }
 
     suspend fun generateSmartCookRecipe(): RecipieFromGemini? {
@@ -147,20 +158,20 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
             null
         }
     }
-    
+
     // Helper to use Date()
     private fun Date() = Calendar.getInstance().time
 
     //Tranferring recipie to Firestore
     ///recipie/allrecipies/Recipie/AX3B
-   suspend fun TransferTofirestore(generatedRecipe: RecipieFromGemini){
+    suspend fun TransferTofirestore(generatedRecipe: RecipieFromGemini) {
         val email = auth.currentUser?.email ?: return
 
 
-          val result = IngredientsUtil.getImageForRecipe(generatedRecipe.visualAnchor)
-          val url   = if(result is String) result else ""
+        val result = IngredientsUtil.getImageForRecipe(generatedRecipe.visualAnchor)
+        val url = if (result is String) result else ""
 
-        val recipeSet= RecipieFromFirebase(
+        val recipeSet = RecipieFromFirebase(
             ingredients = generatedRecipe.ingredients,
             steps = generatedRecipe.steps,
             name = generatedRecipe.name,
@@ -183,23 +194,26 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
 
         idforpass = recipeSet.id
         recipie = recipeSet
-        
-         db.collection("recipie")
-             .document("allrecipies")
-             .collection("Recipie")
-             .document(recipeSet.id)
-             .set(recipeSet)
-             .addOnSuccessListener {
-                 Log.d("Success","Recipe Added")
-                 transferToFirebase()
-             }
-             .addOnFailureListener {
-                  Log.d("Failure","Recipe Not Added")
-             }
+
+        db.collection("recipie")
+            .document("allrecipies")
+            .collection("Recipie")
+            .document(recipeSet.id)
+            .set(recipeSet)
+            .addOnSuccessListener {
+                Log.d("Success", "Recipe Added")
+                // saveToHistory()
+                //transferToFirebase()
+              //  checkAndLimitHistory()
+                checkAndSaveToHistory()
+            }
+            .addOnFailureListener {
+                Log.d("Failure", "Recipe Not Added")
+            }
 
     }
 
-    fun fetchResToday(){
+    fun fetchResToday() {
         val time = Calendar.getInstance().time
         val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         val formatted = formatter.format(time)
@@ -210,7 +224,7 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
             .document(formatted)
             .get()
             .addOnSuccessListener { document ->
-                if(document.exists())
+                if (document.exists())
                     recipie = document.toObject(RecipieFromFirebase::class.java)
                 else
                     recipie = RecipieFromFirebase(name = "No Recipe Today")
@@ -232,65 +246,9 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
     }
 
 
-    fun checkAndLimitHistory() {
-        val email = auth.currentUser?.email ?: return
-        val historyRef = db.collection("users")
-            .document(email)
-            .collection("previousRecipie")
-
-        historyRef.get()
-            .addOnSuccessListener { snapshots ->
-                if (snapshots.size() > 10) {
-                    // Find the oldest document.
-                    // Ideally, you should sort by a timestamp, but for now we take the first.
-                    val oldestDoc = snapshots.documents.firstOrNull()
-                    oldestDoc?.reference?.delete()?.addOnSuccessListener {
-                        Log.d("Cleanup", "Deleted oldest recipe: ${oldestDoc.id}")
-                        fetchallpreviousRecipies() // Just refresh the list, don't re-trigger transfer!
-                    }?.addOnFailureListener {
-                        fetchallpreviousRecipies()
-                    }
-                } else {
-                    fetchallpreviousRecipies()
-                }
-            }
-            .addOnFailureListener {
-                fetchallpreviousRecipies()
-            }
-    }
 
 
-    fun transferToFirebase(){
-        val currentRecipe = recipie ?: return
-        val recipeId = currentRecipe.id.ifEmpty { idforpass }
 
-        if (recipeId.isEmpty()) {
-            Log.e("HomeViewModel", "Cannot transfer to Firebase: Recipe ID is empty")
-            return
-        }
-
-        val recipieToHistroy= prevRecipie(
-            id = recipeId,
-            name = currentRecipe.name,
-            image = currentRecipe.imageUrl,
-            cookTime = currentRecipe.cooktime,
-            isFavourite = false
-        )
-
-        db.collection("users")
-            .document(auth.currentUser?.email ?: return)
-            .collection("previousRecipie")
-            .document(recipeId)
-            .set(recipieToHistroy)
-            .addOnSuccessListener {
-                Log.d("Success","Recipe Added to History")
-                checkAndLimitHistory() // Check for cleanup after adding
-            }
-            .addOnFailureListener {
-                Log.d("Failure","Recipe Not Added to History")
-            }
-
-    }
 
     fun fetchallpreviousRecipies() {
         val email = auth.currentUser?.email ?: return
@@ -306,10 +264,10 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
             }
     }
 
-    fun toogleFavourite(id:String) {
+    fun toogleFavourite(id: String) {
         val recipie = previousRecipies.find { it.id == id } ?: return
         val updatedRecipie = recipie.copy(isFavourite = !recipie.isFavourite)
-        if(updatedRecipie.isFavourite == true){
+        if (updatedRecipie.isFavourite == true) {
             db.collection("users")
                 .document(auth.currentUser?.email ?: return)
                 .collection("favouriteRecipie")
@@ -318,7 +276,8 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
                 .addOnSuccessListener {
                     Log.d("Success", "Recipe Favorite Toggled")
                     // Update local state after successful remote update
-                    previousRecipies = previousRecipies.map { if (it.id == id) updatedRecipie else it }
+                    previousRecipies =
+                        previousRecipies.map { if (it.id == id) updatedRecipie else it }
 
 
                     updateprev(id, updatedRecipie)
@@ -328,7 +287,7 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
                 }
 
 
-        }else{
+        } else {
             db.collection("users")
                 .document(auth.currentUser?.email ?: return)
                 .collection("favouriteRecipie")
@@ -336,7 +295,7 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
                 .delete()
                 .addOnSuccessListener {
                     Log.d("Success", "Recipe Favorite Toggled")
-                     updateprev(id, updatedRecipie)
+                    updateprev(id, updatedRecipie)
                 }
                 .addOnFailureListener {
                     Log.d("Failure", "Failed to toggle Favorite")
@@ -361,6 +320,39 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
             if (it.id == id) updatedRecipie else it
         }
         Log.d("Success", "Favorite state synced locally and remotely")
+    }
+
+    fun checkAndSaveToHistory() {
+        val email = auth.currentUser?.email ?: return
+        val currentRecipe = recipie ?: return
+        val historyRef = db.collection("users").document(email).collection("previousRecipie")
+
+        historyRef.get().addOnSuccessListener { snapshots ->
+            val recipeId = currentRecipe.id.ifEmpty { idforpass }
+            val historyItem = prevRecipie(
+                id = recipeId,
+                name = currentRecipe.name,
+                image = currentRecipe.imageUrl,
+                cookTime = currentRecipe.cooktime,
+                isFavourite = false
+            )
+
+            // If at or over limit, delete the oldest FIRST
+            if (snapshots.size() >= 10) {
+                val oldestDoc = snapshots.documents.firstOrNull()
+                oldestDoc?.reference?.delete()?.addOnSuccessListener {
+                    // AFTER delete, add the new one
+                    historyRef.document(recipeId).set(historyItem).addOnSuccessListener {
+                        fetchallpreviousRecipies()
+                    }
+                }
+            } else {
+                // NOT at limit, just add the new one immediately
+                historyRef.document(recipeId).set(historyItem).addOnSuccessListener {
+                    fetchallpreviousRecipies()
+                }
+            }
+        }
     }
 
 

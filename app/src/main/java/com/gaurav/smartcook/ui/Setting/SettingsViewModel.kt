@@ -15,14 +15,18 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val db: FirebaseFirestore,
+    private val auth: FirebaseAuth
+)  : ViewModel() {
 
-class SettingsViewModel(application: Application)  : AndroidViewModel(application) {
-
-    private val db = Firebase.firestore
-    private val auth = Firebase.auth // Initialize Auth
 
     var userProfile = mutableStateOf<UserProfile?>(null)
     var isLoading = mutableStateOf(false)
@@ -85,7 +89,7 @@ class SettingsViewModel(application: Application)  : AndroidViewModel(applicatio
     fun updateUserData(updatedProfile: UserProfile, onComplete: (Boolean) -> Unit) {
         val email = auth.currentUser?.email
 
-         val uid = FirebaseAuth.getInstance().currentUser?.uid
+         val uid =auth.currentUser?.uid
 
         if (uid != null && email != null) {
             isUpdating.value = true

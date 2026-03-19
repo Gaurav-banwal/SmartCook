@@ -53,7 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.gaurav.smartcook.R
 import com.gaurav.smartcook.data.local.AppDatabase
@@ -156,8 +156,8 @@ fun IngredientItem(ingredient: Ingredient,
 }
 
 @Composable
-fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
-                    ingredientViewModel: IngredientViewModel = viewModel()) {
+fun InventoryScreen( onAddClickedexp: () -> Unit = {},
+                    ingredientViewModel: IngredientViewModel = hiltViewModel()) {
 
     val searchState = rememberTextFieldState()
     val allIngredients by ingredientViewModel.ingredients.collectAsState()
@@ -300,17 +300,5 @@ fun InventoryScreen(db: AppDatabase, onAddClickedexp: () -> Unit = {},
                 }
             }
         }
-    }
-}
-
-
-
-
-
-@Preview
-@Composable
-fun previewInv() {
-    AppTheme {
-        InventoryScreen(db = AppDatabase.getDatabase(LocalContext.current))
     }
 }

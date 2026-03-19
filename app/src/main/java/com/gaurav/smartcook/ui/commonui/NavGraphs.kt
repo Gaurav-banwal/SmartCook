@@ -3,6 +3,8 @@ package com.gaurav.smartcook.ui.commonui
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -17,7 +19,7 @@ import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
 import com.gaurav.smartcook.viewmodel.AuthViewModel
 
 fun NavGraphBuilder.authNavGraph(
-    navController: NavHostController,    authViewModel: AuthViewModel,
+    navController: NavHostController,
 
 ) {
     navigation(
@@ -25,6 +27,12 @@ fun NavGraphBuilder.authNavGraph(
         route = "auth"
     ) {
         composable(route = Screen.Login.route) {
+
+            val authViewModel: AuthViewModel = hiltViewModel(
+                remember(it) { navController.getBackStackEntry("auth") }
+            )
+
+
             val uiState by authViewModel.loginstate.collectAsState()
 
             LaunchedEffect(uiState.isSuccess) {
@@ -46,6 +54,10 @@ fun NavGraphBuilder.authNavGraph(
 
         }
             composable(route = Screen.Registration.route){
+
+                val authViewModel: AuthViewModel = hiltViewModel(
+                    remember(it) { navController.getBackStackEntry("auth") }
+                )
                 val uiState by authViewModel.registerstate.collectAsState()
 
                 LaunchedEffect(uiState.isSuccess) {
@@ -69,6 +81,10 @@ fun NavGraphBuilder.authNavGraph(
             }
 
             composable(route = Screen.ForgetPassword.route) {
+
+                val authViewModel: AuthViewModel = hiltViewModel(
+                    remember(it) { navController.getBackStackEntry("auth") }
+                )
                 val uiState by authViewModel.resetstate.collectAsState()
 
                 LaunchedEffect(uiState.isSuccess) {
