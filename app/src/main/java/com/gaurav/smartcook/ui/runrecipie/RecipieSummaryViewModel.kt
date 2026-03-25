@@ -4,7 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
+import com.gaurav.smartcook.data.repository.RecipieRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -12,12 +14,12 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class RecipieSummaryViewModel @Inject constructor(
-    private val db: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val repository: RecipieRepository
 ): ViewModel() {
 
 
@@ -28,53 +30,25 @@ class RecipieSummaryViewModel @Inject constructor(
 
     fun fetchRecipie(recid: String) {
         if (recid.isEmpty()) return
-        
-        isLoading = true
-        isError = false
-        
-        val email = auth.currentUser?.email
-        
-        // We try to fetch from the user's specific path first if they have custom recipes
-        if (email != null) {
-            db.collection("recipie")
-                .document("allrecipies")
-                .collection("Recipie")
-                .document(recid)
-                .get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        recipie = document.toObject(RecipieFromFirebase::class.java)
-                        isLoading = false
-                    } else {
-                        // If not found in user path, try the global collection
-                       // fetchGlobalRecipie(recid)
-                    }
-                }
-                .addOnFailureListener {
-                   // fetchGlobalRecipie(recid)
-                }
-        } else {
-           // fetchGlobalRecipie(recid)
+
+        viewModelScope.launch {
+
+            isLoading = true
+            isError = false
+
+            val res = repository.getRecipieBYId(recid)
+
+            if(res != null){
+                recipie = res
+            }else {
+                isError = true
+            }
+            isLoading = false
+
         }
+
+
     }
 
-    private fun fetchGlobalRecipie(recid: String) {
-        db.collection("recipies")
-            .document("allrecipies")
-            .collection("Recipie")
-            .document(recid)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    recipie = document.toObject(RecipieFromFirebase::class.java)
-                } else {
-                    isError = true
-                }
-                isLoading = false
-            }
-            .addOnFailureListener {
-                isError = true
-                isLoading = false
-            }
-    }
+
 }

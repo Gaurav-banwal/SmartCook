@@ -312,7 +312,7 @@ fun SmartCookScreen(
                 )
             }
             composable(route =BottomBarScreen.Settings.route ){
-                SettingScreen(authviewModel = hiltViewModel(),
+                SettingScreen(
                         settingsViewModel = hiltViewModel(),
                      onLogoutSuccess = {
                          navController.navigate(Screen.Login.route)

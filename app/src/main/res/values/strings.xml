@@ -2,4 +2,6 @@
     <string name="app_name">SmartCook</string>
     <string name="Home">HomeScreen</string>
     <string name="back_button">Back button </string>
+    <string name="prompt">
+</string>
 </resources>

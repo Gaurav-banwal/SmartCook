@@ -1,30 +1,21 @@
 package com.gaurav.smartcook.ui.Setting
 
 
-
-import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.gaurav.smartcook.data.remote.firebase.UserProfile
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
-import com.google.firebase.firestore.ktx.firestore
+import com.gaurav.smartcook.data.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val db: FirebaseFirestore,
-    private val auth: FirebaseAuth
+   private val userRepository: ProfileRepository
 )  : ViewModel() {
 
 
@@ -54,61 +45,62 @@ class SettingsViewModel @Inject constructor(
         specialNote = profile.Specialcooknote
     }
 
+    val usremail: String get() = if(userRepository.getUserEmail()!=null) userRepository.getUserEmail()!! else ""
+
 
     init {
         fetchUserDataFromAuth()
     }
 
+    //getting error because of no internet so using try catch block
     fun fetchUserDataFromAuth() {
-        val currentUser = auth.currentUser
-        val email = currentUser?.email
 
-        if (email != null) {
-            isLoading.value = true
+        viewModelScope.launch {
+            try {
+                isLoading.value = true
 
-
-            db.collection("users")
-                .document(email)
-                .collection("userdata")
-                .document("profile")
-                .get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        userProfile.value = document.toObject(UserProfile::class.java)
-                    }
-                    isLoading.value = false
+                val profile = userRepository.getProfile()
+                if (profile != null) {
+                    userProfile.value = profile
+                    loadProfileIntoState(profile)
                 }
-                .addOnFailureListener {
-                    isLoading.value = false
-                }
-        } else {
-            println("No user is signed in via Firebase Auth")
+            }catch (e: Exception){
+              //need to DO
+            }finally {
+                isLoading.value = false
+            }
+
+
         }
+
     }
 
     fun updateUserData(updatedProfile: UserProfile, onComplete: (Boolean) -> Unit) {
-        val email = auth.currentUser?.email
-
-         val uid =auth.currentUser?.uid
-
-        if (uid != null && email != null) {
-            isUpdating.value = true
 
 
-            db.collection("users")
-                .document(email)
-                .collection("userdata")
-                .document("profile")
-                .set(updatedProfile)
-                .addOnSuccessListener {
-                    userProfile.value = updatedProfile
-                    isUpdating.value = false
-                    onComplete(true)
-                }
-                .addOnFailureListener {
-                    isUpdating.value = false
-                    onComplete(false)
-                }
+     viewModelScope.launch {
+         try {
+             isUpdating.value = true
+             val profile = userRepository.saveProfile(updatedProfile)
+
+             if (profile) {
+                 userProfile.value = updatedProfile
+             }
+             isUpdating.value = false
+             onComplete(profile)
+         } catch (e: Exception) {
+
+             onComplete(false)
+         }
+         finally {
+            isUpdating.value = false
+         }
+
+
         }
+    }
+
+    fun logout(){
+        userRepository.logout()
     }
 }

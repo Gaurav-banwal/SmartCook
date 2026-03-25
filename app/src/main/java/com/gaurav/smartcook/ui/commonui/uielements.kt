@@ -65,7 +65,8 @@ fun FoodItem(food: prevRecipie, modifier: Modifier= Modifier,
             .padding(horizontal = 15.dp, vertical = 0.dp),
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .4f),
         shape = RoundedCornerShape(24.dp),
-        tonalElevation = 2.dp
+        tonalElevation = 2.dp,
+        onClick = { onItemClick(food.id) }
     ){
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -85,8 +86,6 @@ fun FoodItem(food: prevRecipie, modifier: Modifier= Modifier,
                 verticalArrangement = Arrangement.Center) {
                 Text(
                     text = food.name,
-                    modifier = Modifier
-                        .weight(1f),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     overflow = TextOverflow.Ellipsis,

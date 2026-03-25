@@ -21,7 +21,6 @@ import com.google.firebase.auth.FirebaseAuth
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
-    authviewModel: AuthViewModel,
     settingsViewModel: SettingsViewModel,
     onLogoutSuccess: () -> Unit
 ) {
@@ -227,7 +226,7 @@ fun SettingScreen(
 
                 OutlinedButton(
                     onClick = {
-                        authviewModel.logout()
+                        settingsViewModel.logout()
                         onLogoutSuccess()
                     },
                     modifier = Modifier
