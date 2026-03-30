@@ -57,9 +57,28 @@ fun FavouriteScreen(
     onItemClick: (String) -> Unit = { _->},
     viewModel: FavouriteViewModel = viewModel()
 ) {
+    FavouriteScreenContent(
+        modifier = modifier,
+        favourites = viewModel.favourites,
+        isLoading = viewModel.isLoading,
+        onItemClick = onItemClick,
+        onRemoveFromFavourite = { viewModel.removefromFavourite(it) },
+        onFetchFavourites = { viewModel.fetchFavourites() }
+    )
+}
+
+@Composable
+fun FavouriteScreenContent(
+    modifier: Modifier = Modifier,
+    favourites: List<prevRecipie>,
+    isLoading: Boolean,
+    onItemClick: (String) -> Unit,
+    onRemoveFromFavourite: (String) -> Unit,
+    onFetchFavourites: () -> Unit
+) {
 
     LaunchedEffect(Unit) {
-        viewModel.fetchFavourites()
+        onFetchFavourites()
     }
 
     val searchState = rememberTextFieldState()
@@ -79,7 +98,7 @@ fun FavouriteScreen(
                 Button(
                     onClick = {
                         favouritetoBeRemoved?.let {
-                            viewModel.removefromFavourite(it.id)
+                            onRemoveFromFavourite(it.id)
                         }
                         showDialog = false
                         favouritetoBeRemoved = null
@@ -105,10 +124,10 @@ fun FavouriteScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-        // Correctly use derivedStateOf to track changes in viewModel.favourites
+        // Correctly use derivedStateOf to track changes in favourites
         val filteredIngredients by remember {
             derivedStateOf {
-                viewModel.favourites.filter {
+                favourites.filter {
                     it.name.contains(searchState.text, ignoreCase = true)
                 }
             }
@@ -117,7 +136,7 @@ fun FavouriteScreen(
         val suggestions by remember {
             derivedStateOf {
                 if (searchState.text.isEmpty()) emptyList()
-                else viewModel.favourites
+                else favourites
                     .map { it.name }
                     .filter { it.contains(searchState.text, ignoreCase = true) }
                     .take(5)
@@ -128,12 +147,12 @@ fun FavouriteScreen(
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.surface),
         ) {
-            if (viewModel.isLoading && viewModel.favourites.isEmpty()) {
+            if (isLoading && favourites.isEmpty()) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = MaterialTheme.colorScheme.primary
                 )
-            } else if (viewModel.favourites.isEmpty() && !viewModel.isLoading) {
+            } else if (favourites.isEmpty() && !isLoading) {
                 Text(
                     text = "No favourites found",
                     style = MaterialTheme.typography.headlineSmall,
@@ -227,6 +246,16 @@ fun FavouriteScreen(
 @Composable
 fun prevFav(){
     AppTheme {
-        FavouriteScreen()
+        // Use the stateless FavouriteScreenContent for previews to avoid ViewModel instantiation issues
+        FavouriteScreenContent(
+            favourites = listOf(
+                prevRecipie(id = "1", name = "Pasta", isFavourite = true),
+                prevRecipie(id = "2", name = "Pizza", isFavourite = true)
+            ),
+            isLoading = false,
+            onItemClick = {},
+            onRemoveFromFavourite = {},
+            onFetchFavourites = {}
+        )
     }
 }

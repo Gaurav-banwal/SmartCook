@@ -388,19 +388,4 @@ fun HomeScreen(
     }
 
 
-//@Preview(showBackground = true, showSystemUi = true)
-//@Composable
-//fun prevOnGoing(){
-//    OnGoing()
-//}
-//
-//@Preview()
-//@Composable
-//fun prevHomeScreen(){
-//    HomeScreen(
-//        viewModel = viewModel(),
-//        onNewRecipeClick = {
-//
-//        }
-//    )
-//}
+

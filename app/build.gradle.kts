@@ -56,6 +56,7 @@ dependencies {
 
 
     implementation(libs.firebase.ai)
+    implementation(libs.androidx.compose.foundation)
     val room_version = "2.7.0-alpha01"
 
     implementation("androidx.room:room-runtime:$room_version")

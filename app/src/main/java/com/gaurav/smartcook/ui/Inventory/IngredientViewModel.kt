@@ -38,25 +38,6 @@ class IngredientViewModel @Inject constructor(
     val ingredients: StateFlow<List<Ingredient>> = repository.getAllIngredients()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addIngredient() {
-        viewModelScope.launch {
-            repository.insertIngredient(
-                Ingredient(
-                    id = name.hashCode(),
-                    name = name,
-                    quantity = quantity.toIntOrNull() ?: 0,
-                    image = "",
-                    unit = unit
-                )
-            )
-            name = ""
-            quantity = ""
-            unit = ""
-        }
-    }
-    
-    // Kept for backward compatibility if needed, but prefer 'ingredients' property
-    fun getallitem() = repository.getAllIngredients()
 
     fun increaseAmount(ingredient: Ingredient) {
         viewModelScope.launch(Dispatchers.IO) {
