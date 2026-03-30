@@ -16,7 +16,7 @@ fun DishSelectionScreen() {
         color = MaterialTheme.colorScheme.surface
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Dish Selection Screen", 
+            Text("Coming in Version 2",
                  style = MaterialTheme.typography.headlineMedium,
                  color = MaterialTheme.colorScheme.onSurface
             )

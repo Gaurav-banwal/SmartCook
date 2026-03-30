@@ -62,9 +62,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Authenticate user with Email and Password
-     */
+
     fun login(email: String, pass: String) {
         viewModelScope.launch {
             _loginstate.value = AuthUiState(isLoading = true)
@@ -77,9 +75,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Create a new user account and set the display name
-     */
+
     fun register(name: String, email: String, pass: String) {
         viewModelScope.launch {
             _registerstate.value = AuthUiState(isLoading = true)
@@ -100,9 +96,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Send a password reset link to the provided email
-     */
+
     fun forgetPassword(email: String) {
         viewModelScope.launch {
             _resetstate.value = AuthUiState(isLoading = true)
@@ -115,9 +109,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Authenticate using a Google ID Token
-     */
     fun googleSignIn(idtoken: String) {
         Log.d("AUTH", "Received token: $idtoken")
         viewModelScope.launch {
@@ -136,9 +127,7 @@ class AuthViewModel @Inject constructor(
         _loginstate.value = AuthUiState(user = null, isSuccess = false)
     }
 
-    /**
-     * Clear all error and success states (e.g., when switching screens)
-     */
+
     fun resetStates() {
         _loginstate.value = AuthUiState()
         _registerstate.value = AuthUiState()
