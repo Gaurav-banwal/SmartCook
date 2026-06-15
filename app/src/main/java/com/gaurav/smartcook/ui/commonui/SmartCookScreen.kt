@@ -255,14 +255,12 @@ fun SmartCookScreen(
                     scope.launch {
                         val generatedResult = homeViewModel.generateSmartCookRecipe()
                         if (generatedResult != null) {
-                            homeViewModel.TransferTofirestore(generatedResult)
+                            val recipeId = homeViewModel.TransferTofirestore(generatedResult)
+                            if (recipeId.isNotEmpty()) {
+                                navController.navigate(Screen.RecipieSummary.createRoute(recipeId))
+                            }
                         }
-                      //  homeViewModel.transferToFirebase()
-                        //homeViewModel.TransferTofirestore(generatedResult)
-                        navController.navigate(Screen.RecipieSummary.createRoute(homeViewModel.idforpass))
-
                     }
-
                 },
                 onRecipeClick = {id ->
                     navController.navigate(Screen.RecipieSummary.createRoute(id))

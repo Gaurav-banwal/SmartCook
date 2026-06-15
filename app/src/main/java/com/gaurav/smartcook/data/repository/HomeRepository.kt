@@ -88,18 +88,29 @@ class HomeRepository  @Inject constructor(
 
         return try {
             val response = model.generateContent(userPrompt)
-            val jsonString = response.text ?: return null
+            var jsonString = response.text ?: return null
+            
+            // Clean markdown code blocks if the model outputs them
+            if (jsonString.startsWith("```")) {
+                jsonString = jsonString.trim()
+                jsonString = if (jsonString.startsWith("```json")) {
+                    jsonString.removePrefix("```json")
+                } else {
+                    jsonString.removePrefix("```")
+                }
+                jsonString = jsonString.removeSuffix("```").trim()
+            }
 
             Json { ignoreUnknownKeys = true }.decodeFromString<RecipieFromGemini>(jsonString)
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("HomeRepository", "Error generating recipe", e)
             null
         }
 
 
     }
 
-   suspend fun saveGlobalRecipie(recipeSet: RecipieFromFirebase) {
+    suspend fun saveGlobalRecipie(recipeSet: RecipieFromFirebase) {
         try {
             db.collection("recipie")
                 .document("allrecipies")
@@ -107,24 +118,22 @@ class HomeRepository  @Inject constructor(
                 .document(recipeSet.id)
                 .set(recipeSet)
                 .await()
-        }catch (e: Exception){
-            //TODO
+        } catch (e: Exception) {
+            android.util.Log.e("HomeRepository", "Error saving global recipe", e)
         }
-
-
     }
-     suspend fun saveToHistory(prevRecipie: prevRecipie) {
-         val  collection = historyCollection()?:return
-         try {
-             val snapshot = collection.get().await()
-             if (snapshot.size()>=10)
-                 snapshot.documents.firstOrNull()?.reference?.delete()
 
-         }catch (e: Exception) {
-             //TODO
-         }
-
-
+    suspend fun saveToHistory(prevRecipie: prevRecipie) {
+        val collection = historyCollection() ?: return
+        try {
+            val snapshot = collection.get().await()
+            if (snapshot.size() >= 10) {
+                snapshot.documents.firstOrNull()?.reference?.delete()?.await()
+            }
+            collection.document(prevRecipie.id).set(prevRecipie).await()
+        } catch (e: Exception) {
+            android.util.Log.e("HomeRepository", "Error saving to history", e)
+        }
     }
      suspend fun getRecipeOfDay(): RecipieFromFirebase? {
          return try {
