@@ -11,6 +11,7 @@ import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.content
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ai.type.generationConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -100,9 +101,12 @@ object FirebaseModule {
         // Use the Firebase AI SDK factory which handles the API key via google-services.json 
         // when using GenerativeBackend.googleAI()
         return Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-            modelName = "gemini-1.5-flash",
+            modelName = "gemini-2.5-flash",
             systemInstruction = content {
                 text(CHEF_SYSTEM_INSTRUCTION)
+            },
+            generationConfig = generationConfig {
+                responseMimeType = "application/json"
             }
         )
     }

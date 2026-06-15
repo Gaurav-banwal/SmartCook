@@ -60,50 +60,50 @@ class HomeViewModel @Inject constructor(
         )
     }
 
-    fun TransferTofirestore(generatedRecipe: RecipieFromGemini) {
-        viewModelScope.launch {
-            try {
-                val result = IngredientsUtil.getImageForRecipe(generatedRecipe.visualAnchor)
-                val url = if (result is String) result else ""
+    suspend fun TransferTofirestore(generatedRecipe: RecipieFromGemini): String {
+        return try {
+            val result = IngredientsUtil.getImageForRecipe(generatedRecipe.visualAnchor)
+            val url = if (result is String) result else ""
 
-                val recipeSet = RecipieFromFirebase(
-                    ingredients = generatedRecipe.ingredients,
-                    steps = generatedRecipe.steps,
-                    name = generatedRecipe.name,
-                    servings = generatedRecipe.servings,
-                    summary = generatedRecipe.summary,
-                    specialNoteUsed = generatedRecipe.specialNoteUsed,
-                    cooktime = generatedRecipe.cooktime,
-                    nutritions = Nutrition(
-                        calories = generatedRecipe.nutritions.calories,
-                        carbs = generatedRecipe.nutritions.carbs,
-                        protein = generatedRecipe.nutritions.protein,
-                        fat = generatedRecipe.nutritions.fat
-                    ),
-                    visualAnchor = generatedRecipe.visualAnchor,
-                    allergysafe = generatedRecipe.allergysafe,
-                    DateModified = Timestamp.now(),
-                    id = UUID.randomUUID().toString(),
-                    imageUrl = url,
+            val recipeSet = RecipieFromFirebase(
+                ingredients = generatedRecipe.ingredients,
+                steps = generatedRecipe.steps,
+                name = generatedRecipe.name,
+                servings = generatedRecipe.servings,
+                summary = generatedRecipe.summary,
+                specialNoteUsed = generatedRecipe.specialNoteUsed,
+                cooktime = generatedRecipe.cooktime,
+                nutritions = Nutrition(
+                    calories = generatedRecipe.nutritions.calories,
+                    carbs = generatedRecipe.nutritions.carbs,
+                    protein = generatedRecipe.nutritions.protein,
+                    fat = generatedRecipe.nutritions.fat
+                ),
+                visualAnchor = generatedRecipe.visualAnchor,
+                allergysafe = generatedRecipe.allergysafe,
+                DateModified = Timestamp.now(),
+                id = UUID.randomUUID().toString(),
+                imageUrl = url,
+            )
+
+            idforpass = recipeSet.id
+            recipie = recipeSet
+
+            homeRepository.saveGlobalRecipie(recipeSet)
+            homeRepository.saveToHistory(
+                prevRecipie(
+                    id = recipeSet.id,
+                    name = recipeSet.name,
+                    image = recipeSet.imageUrl,
+                    cookTime = recipeSet.cooktime,
+                    isFavourite = false
                 )
-
-                idforpass = recipeSet.id
-                recipie = recipeSet
-
-                homeRepository.saveGlobalRecipie(recipeSet)
-                homeRepository.saveToHistory(
-                    prevRecipie(
-                        id = recipeSet.id,
-                        name = recipeSet.name,
-                        image = recipeSet.imageUrl,
-                        cookTime = recipeSet.cooktime,
-                        isFavourite = false
-                    )
-                )
-                fetchallpreviousRecipies()
-            } catch (e: Exception) {
-                Log.e("HomeViewModel", "Error transferring to firestore", e)
-            }
+            )
+            fetchallpreviousRecipies()
+            recipeSet.id
+        } catch (e: Exception) {
+            Log.e("HomeViewModel", "Error transferring to firestore", e)
+            ""
         }
     }
 
