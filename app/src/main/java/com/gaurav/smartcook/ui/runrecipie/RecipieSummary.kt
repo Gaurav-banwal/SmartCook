@@ -36,19 +36,18 @@ import com.gaurav.smartcook.data.remote.firebase.Nutrition
 @Composable
 fun RecipieSummaryScreen(
     recid: String,
+    modifier: Modifier = Modifier,
     recipeSViewModel: RecipieSummaryViewModel = viewModel(),
     onBack: () -> Unit = {},
     onStartCook: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var recipeImage by remember { mutableStateOf<Any>(R.drawable.pizza) }
-    // FIX: Move fetch logic into LaunchedEffect
+    
     LaunchedEffect(recid) {
-
-        recipeSViewModel.fetchRecipie(
-            recid
-        )
+        recipeSViewModel.fetchRecipie(recid)
     }
+
     val recipe = recipeSViewModel.recipie ?: RecipieFromFirebase(
         name = "Loading...",
         summary = "",
@@ -61,9 +60,6 @@ fun RecipieSummaryScreen(
         id = ""
     )
 
-
-
-
     LaunchedEffect(recipe.name) {
         recipeImage = recipe.imageUrl.ifEmpty {
             IngredientsUtil.getImageForRecipe(recipe.visualAnchor)
@@ -71,7 +67,7 @@ fun RecipieSummaryScreen(
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
@@ -79,7 +75,7 @@ fun RecipieSummaryScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // Hero Image with Gradient Overlay and Back Button
+
             Box(modifier = Modifier.height(300.dp)) {
                 AsyncImage(
                     model = recipeImage,
@@ -88,12 +84,6 @@ fun RecipieSummaryScreen(
                     contentScale = ContentScale.Crop,
                     error = painterResource(R.drawable.pizza)
                 )
-//                Image(
-//                    painterResource(R.drawable.pizza),
-//                    contentDescription = recipe.name,
-//                    modifier = Modifier.fillMaxSize(),
-//                    contentScale = ContentScale.Crop
-//                )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

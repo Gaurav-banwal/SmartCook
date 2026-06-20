@@ -85,7 +85,7 @@ val list = listOf<food>(
     food(2,"pasta1","20 mins", R.drawable.pasta1, favourite = true),
     food(3,"pasta2","20 mins", R.drawable.pasta2, favourite = false),
     food(4,"pasta3","20 mins", R.drawable.pasta3, favourite = false),
-     food(5,"pasta4","20 mins", R.drawable.pasta4, favourite = false)
+    food(5,"pasta4","20 mins", R.drawable.pasta4, favourite = false)
 )
 
 
@@ -133,62 +133,62 @@ fun HomeHeader(username: String) {
 @Composable
 fun OnGoing(modifier: Modifier = Modifier
     .size(320.dp)
-    ){
+){
 
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(30.dp))
             .height(350.dp)
             .width(320.dp)
-            ,
+        ,
 
         color = MaterialTheme.colorScheme.secondaryContainer,
 
-    ) {
+        ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ){
-          Image(
-              painter = painterResource(
-                  id = R.drawable.pizza
-              ),
-              contentDescription = "Image of Pizza",
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .height(220.dp),
-              contentScale = ContentScale.Crop
+            Image(
+                painter = painterResource(
+                    id = R.drawable.pizza
+                ),
+                contentDescription = "Image of Pizza",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentScale = ContentScale.Crop
 
-          )
-                  Spacer(modifier = Modifier.height(7.dp))
-                 Row(
-                     modifier = Modifier.fillMaxWidth(),
-                     verticalAlignment = Alignment.CenterVertically,
-                     horizontalArrangement = Arrangement.SpaceBetween
-                 ){
+            )
+            Spacer(modifier = Modifier.height(7.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
 
-                     Column() {
-                         Text(
-                             text = "Pizza",
-                             style = MaterialTheme.typography.headlineMedium,
-                             color = MaterialTheme.colorScheme.onSecondary,
-                             modifier = Modifier.padding(start = 15.dp)
-                         )
-                         Text(
-                             text = " 30 mins",
-                             style = MaterialTheme.typography.bodyMedium,
+                Column() {
+                    Text(
+                        text = "Pizza",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier.padding(start = 15.dp)
+                    )
+                    Text(
+                        text = " 30 mins",
+                        style = MaterialTheme.typography.bodyMedium,
 
-                             color = MaterialTheme.colorScheme.onSecondary,
-                             modifier = Modifier.padding(start = 15.dp)
-                         )
-                     }
-                     Icon(
-                         imageVector = Icons.Default.Refresh,
-                         modifier = Modifier.padding(end = 15.dp, top = 15.dp)
-                             .size(35.dp),
-                         contentDescription = null
-                     )
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier.padding(start = 15.dp)
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    modifier = Modifier.padding(end = 15.dp, top = 15.dp)
+                        .size(35.dp),
+                    contentDescription = null
+                )
 
-                 }
+            }
 
 
 
@@ -292,7 +292,7 @@ fun HomeScreen(
     Surface(modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface,
 
-    ) {
+        ) {
 
         LaunchedEffect(Unit) {
             viewModel.fetchResToday()
@@ -312,7 +312,7 @@ fun HomeScreen(
             Spacer(
                 modifier = Modifier.size(10.dp)
             )
-            
+
 
             viewModel.recipie?.let { recipe ->
                 PopularRecipeCard(recipe = recipe)
@@ -382,10 +382,10 @@ fun HomeScreen(
 
 
 
-        }
-
-
     }
+
+
+}
 
 
 

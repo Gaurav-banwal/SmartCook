@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -66,8 +67,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun IngredientItem(ingredient: Ingredient,
                    modifier: Modifier= Modifier,
-             onIncClick : (Ingredient) -> Unit = {},
-             onDecClick : (Ingredient) -> Unit = {}
+                   onIncClick : (Ingredient) -> Unit = {},
+                   onDecClick : (Ingredient) -> Unit = {}
 ){
     Surface(
         modifier = modifier
@@ -77,87 +78,87 @@ fun IngredientItem(ingredient: Ingredient,
         shape = RoundedCornerShape(16.dp),
         tonalElevation = 10.dp
     ){
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            AsyncImage(
+                model = ingredient.image.ifEmpty {
+                    R.drawable.pizza
+                },
+                contentDescription = null,
+                placeholder = painterResource(R.drawable.pizza),
+                error = painterResource(R.drawable.pizza),
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Text(
+                text = ingredient.name,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(bottom = 2.dp, end = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AsyncImage(
-                    model = ingredient.image.ifEmpty {
-                        R.drawable.pizza 
-                    }, 
-                    contentDescription = null,
-                    placeholder = painterResource(R.drawable.pizza),
-                    error = painterResource(R.drawable.pizza),
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop
-                )
-
                 Text(
-                    text = ingredient.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                    text = "Quantity",
+                    style = MaterialTheme.typography.bodyMedium
                 )
-
-                Column(
-                    modifier = Modifier
-                        .padding(bottom = 2.dp, end = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Row(
+                    modifier = Modifier,
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Quantity",
-                        style = MaterialTheme.typography.bodyMedium
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
+                            .background(color = MaterialTheme.colorScheme.tertiary)
+                            .clickable {
+                                onDecClick(ingredient)
+                            },
+                        contentDescription = "Subtract",
+                        tint = MaterialTheme.colorScheme.onSecondary
                     )
-                    Row(
-                        modifier = Modifier,
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Remove,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
-                                .background(color = MaterialTheme.colorScheme.tertiary)
-                                .clickable {
-                                    onDecClick(ingredient)
-                                },
-                            contentDescription = "Subtract",
-                            tint = MaterialTheme.colorScheme.onSecondary
-                        )
-                        Text(
-                            text = ingredient.quantity.toString(),
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
-                                .background(color = MaterialTheme.colorScheme.tertiary)
-                                .clickable {
-                                    onIncClick(ingredient)
-                                },
-                            contentDescription = "Add",
-                            tint = MaterialTheme.colorScheme.onSecondary
-                        )
-                    }
-
                     Text(
-                        text = "Unit ${ingredient.unit}",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = ingredient.quantity.toString(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
+                            .background(color = MaterialTheme.colorScheme.tertiary)
+                            .clickable {
+                                onIncClick(ingredient)
+                            },
+                        contentDescription = "Add",
+                        tint = MaterialTheme.colorScheme.onSecondary
                     )
                 }
+
+                Text(
+                    text = "Unit ${ingredient.unit}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
+    }
 }
 
 @Composable
 fun InventoryScreen( onAddClickedexp: () -> Unit = {},
-                    ingredientViewModel: IngredientViewModel = hiltViewModel()) {
+                     ingredientViewModel: IngredientViewModel = hiltViewModel()) {
 
     val searchState = rememberTextFieldState()
     val allIngredients by ingredientViewModel.ingredients.collectAsState()
@@ -195,8 +196,8 @@ fun InventoryScreen( onAddClickedexp: () -> Unit = {},
             confirmButton = {
                 Button(
                     onClick = {
-                        ingredientTobeDeleted?.let { 
-                            ingredientViewModel.deleteIngredient(it) 
+                        ingredientTobeDeleted?.let {
+                            ingredientViewModel.deleteIngredient(it)
                         }
                         showDialog = false
                         ingredientTobeDeleted = null
@@ -219,24 +220,23 @@ fun InventoryScreen( onAddClickedexp: () -> Unit = {},
     }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.surface),
-         floatingActionButton = {
-             FloatingActionButton(
-                 onClick = { onAddClickedexp() },
-                 shape = CircleShape,
-                 modifier = Modifier.size(60.dp),
-                 containerColor = MaterialTheme.colorScheme.primary
-             ) {
-                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-             }
-         }
-    ) { innerpadding ->
+
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddClickedexp,
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Item")
+            }
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerpadding)
+                .padding(innerPadding)
+                .background(color = MaterialTheme.colorScheme.surface)
         ) {
             SimpleSearchBar(
                 textFieldState = searchState,
@@ -252,14 +252,17 @@ fun InventoryScreen( onAddClickedexp: () -> Unit = {},
                 modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
             )
 
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
                 items(filteredIngredients, key = { it.id }) { ingredient ->
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { dismissValue ->
                             if (dismissValue != SwipeToDismissBoxValue.Settled) {
                                 ingredientTobeDeleted = ingredient
                                 showDialog = true
-                                false // Don't dismiss immediately, wait for dialog
+                                false
                             } else {
                                 false
                             }

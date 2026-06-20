@@ -13,9 +13,9 @@ class RecipieRepository @Inject constructor(
     private val auth: FirebaseAuth
 ) {
 
-    private val userId = auth.currentUser?.uid
-
-    private val email = auth.currentUser?.email
+//    private val userId = auth.currentUser?.uid
+//
+//    private val email = auth.currentUser?.email
 
     suspend fun getRecipieBYId(recipieid: String): RecipieFromFirebase?{
         return try{
@@ -36,16 +36,16 @@ class RecipieRepository @Inject constructor(
 
     }
 
-    suspend fun saveRecipie(recipie: RecipieFromFirebase) {
-
-        firestore.collection("recipie")
-            .document("allrecipies")
-            .collection("Recipie")
-            .document(recipie.id)
-            .set(recipie)
-            .await()
-
-    }
+//    suspend fun saveRecipie(recipie: RecipieFromFirebase) {
+//
+//        firestore.collection("recipie")
+//            .document("allrecipies")
+//            .collection("Recipie")
+//            .document(recipie.id)
+//            .set(recipie)
+//            .await()
+//
+//    }
 
 
 

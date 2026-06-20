@@ -98,8 +98,7 @@ object FirebaseModule {
     @Singleton
     @Provides
     fun provideGeminiModel(): GenerativeModel {
-        // Use the Firebase AI SDK factory which handles the API key via google-services.json 
-        // when using GenerativeBackend.googleAI()
+
         return Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
             modelName = "gemini-2.5-flash",
             systemInstruction = content {

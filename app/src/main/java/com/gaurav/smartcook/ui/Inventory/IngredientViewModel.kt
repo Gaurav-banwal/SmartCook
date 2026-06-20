@@ -34,7 +34,7 @@ class IngredientViewModel @Inject constructor(
     
 
 
-    // Expose ingredients as a StateFlow for better state management
+
     val ingredients: StateFlow<List<Ingredient>> = repository.getAllIngredients()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

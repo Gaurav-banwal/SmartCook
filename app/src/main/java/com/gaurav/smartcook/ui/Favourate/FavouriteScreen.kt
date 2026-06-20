@@ -246,7 +246,7 @@ fun FavouriteScreenContent(
 @Composable
 fun prevFav(){
     AppTheme {
-        // Use the stateless FavouriteScreenContent for previews to avoid ViewModel instantiation issues
+
         FavouriteScreenContent(
             favourites = listOf(
                 prevRecipie(id = "1", name = "Pasta", isFavourite = true),
