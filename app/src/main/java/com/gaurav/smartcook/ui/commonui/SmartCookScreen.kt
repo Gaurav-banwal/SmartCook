@@ -42,10 +42,6 @@ import com.gaurav.smartcook.ui.theme.AppTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.room.Room
-import com.gaurav.smartcook.data.local.AppDatabase
-import com.gaurav.smartcook.data.remote.firebase.Nutrition
-import com.gaurav.smartcook.data.remote.firebase.RecipieFromFirebase
 import com.gaurav.smartcook.ui.Favourate.FavouriteScreen
 import com.gaurav.smartcook.ui.Favourate.FavouriteViewModel
 import com.gaurav.smartcook.ui.Home.HomeScreen
@@ -141,7 +137,7 @@ fun SmartCookBottonBar(modifier: Modifier,navController: NavHostController,navli
         tonalElevation = 6.dp,
 
 
-    ) {
+        ) {
 
         navlist.forEach { screen ->
 
@@ -171,8 +167,9 @@ fun SmartCookScreen(
 
     navController:NavHostController = rememberNavController()
 ){
-    // Get current back stack entry to track state for TopBar
+
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
     val navlist = listOf(
         BottomBarScreen.Home,
@@ -181,8 +178,8 @@ fun SmartCookScreen(
         BottomBarScreen.Settings
     )
 
-     //auth viewmodel
-   // val authViewModel: AuthViewModel = hiltViewModel<AuthViewModel>()
+    //auth viewmodel
+    // val authViewModel: AuthViewModel = hiltViewModel<AuthViewModel>()
     val IngviewModel: IngredientViewModel = hiltViewModel<IngredientViewModel>()
     val settingsViewModel = hiltViewModel<SettingsViewModel>()
     val recipeViewModel = hiltViewModel<RecipieSummaryViewModel>()
@@ -190,86 +187,67 @@ fun SmartCookScreen(
     val favouriteViewModel = hiltViewModel<FavouriteViewModel>()
 
 
-
-
-
-
-
+    val isSummaryRoute = currentRoute?.startsWith("recipie_summary_screen") == true
+    val shouldShowBars = currentRoute != Screen.Login.route &&
+            currentRoute != Screen.Registration.route &&
+            currentRoute != Screen.ForgetPassword.route &&
+            currentRoute != Screen.RecipeSteps.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            if(backStackEntry?.destination?.route == Screen.Home.route ||
-                backStackEntry?.destination?.route == Screen.Settings.route){
+
+            if(currentRoute == Screen.Home.route || currentRoute == Screen.Settings.route){
                 SmartCookTopBar(modifier = Modifier,
                     canNavigateBack = false,
-//                    canNavigateBack = navController.previousBackStackEntry != null
-//                            && navController.currentDestination?.route != Screen.Home.route,
                     navigateUp = {  navController.navigateUp() })
             }
 
         },
         bottomBar = {
-
-            if(backStackEntry?.destination?.route != Screen.Login.route &&
-                backStackEntry?.destination?.route != Screen.Registration.route
-                && backStackEntry?.destination?.route != Screen.ForgetPassword.route){
+            if(shouldShowBars){
                 SmartCookBottonBar(modifier = Modifier, navController, navlist)
             }
-
-        },
-
-        floatingActionButton = {
-            if(false)
-            FloatingActionButton(
-                onClick = { /* Handle click */ },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Help, contentDescription = "Add")
-            }
-
         },
 
         containerColor = MaterialTheme.colorScheme.primaryContainer
 
     ) {innerPadding->
 
-
-
-
         NavHost(
             navController = navController,
             startDestination = "auth",
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                // Apply Scaffold padding to ensure screens don't hide under the bars
+                .padding(if (shouldShowBars) innerPadding else androidx.compose.foundation.layout.PaddingValues(0.dp))
         ){
 
             authNavGraph(navController)
 
-        composable(route =BottomBarScreen.Home.route ){
-            val scope = rememberCoroutineScope()
-            HomeScreen(
-                homeViewModel,
-                onNewRecipeClick = {
-                    scope.launch {
-                        val generatedResult = homeViewModel.generateSmartCookRecipe()
-                        if (generatedResult != null) {
-                            val recipeId = homeViewModel.TransferTofirestore(generatedResult)
-                            if (recipeId.isNotEmpty()) {
-                                navController.navigate(Screen.RecipieSummary.createRoute(recipeId))
+            composable(route =BottomBarScreen.Home.route ){
+                val scope = rememberCoroutineScope()
+                HomeScreen(
+                    homeViewModel,
+                    onNewRecipeClick = {
+                        scope.launch {
+                            val generatedResult = homeViewModel.generateSmartCookRecipe()
+                            if (generatedResult != null) {
+                                homeViewModel.TransferTofirestore(generatedResult)
                             }
+                            navController.navigate(Screen.RecipieSummary.createRoute(homeViewModel.idforpass))
+
                         }
+
+                    },
+                    onRecipeClick = {id ->
+                        navController.navigate(Screen.RecipieSummary.createRoute(id))
+                    },
+                    onFavouriteClick = {id ->
+                        homeViewModel.toogleFavourite(id)
                     }
-                },
-                onRecipeClick = {id ->
-                    navController.navigate(Screen.RecipieSummary.createRoute(id))
-                },
-                onFavouriteClick = {id ->
-                    homeViewModel.toogleFavourite(id)
-                }
-            )
-        }
+                )
+            }
 
             composable(route = Screen.RecipieSummary.route,
                 arguments = listOf(
@@ -282,22 +260,19 @@ fun SmartCookScreen(
                     recid = recipeId,
                     recipeSViewModel = recipeViewModel,
                     onBack = { navController.popBackStack() },
-                    onStartCook = { navController.navigate(Screen.DishSelection.route) }
-
+                    onStartCook = { navController.navigate(Screen.RecipeSteps.route) }
                 )
             }
             composable(route =BottomBarScreen.Ingredients.route ){
-               InventoryScreen(
-                   onAddClickedexp = {
-                       navController.navigate(Screen.AddIngredient.route)
-                   }
-               )
+                InventoryScreen(
+                    onAddClickedexp = {
+                        navController.navigate(Screen.AddIngredient.route)
+                    }
+                )
             }
 
 
-            recipeNavGraph(navController)
-
-
+            recipeNavGraph(navController, recipeViewModel)
 
 
             composable(route =BottomBarScreen.Favorites.route ){
@@ -311,10 +286,10 @@ fun SmartCookScreen(
             }
             composable(route =BottomBarScreen.Settings.route ){
                 SettingScreen(
-                        settingsViewModel = hiltViewModel(),
-                     onLogoutSuccess = {
-                         navController.navigate(Screen.Login.route)
-                     }
+                    settingsViewModel = settingsViewModel,
+                    onLogoutSuccess = {
+                        navController.navigate(Screen.Login.route)
+                    }
                 )
             }
 
@@ -323,17 +298,16 @@ fun SmartCookScreen(
 
                     onBackClick = { navController.popBackStack() },
                     onAddClick = { name, quantity,unit ->
-                        // Add to your data source here
-                       IngviewModel.quantity = quantity.toString()
+
+                        IngviewModel.quantity = quantity.toString()
                         IngviewModel.name = name
-                         IngviewModel.unit = unit
+                        IngviewModel.unit = unit
                         IngviewModel.addIngredientWithImage(name, quantity,unit)
                         IngviewModel.name = ""
                         IngviewModel.quantity = ""
                         IngviewModel.unit = ""
                         navController.popBackStack()
                     }
-
                 )
             }
         }

@@ -9,12 +9,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.gaurav.smartcook.data.local.AppDatabase
 import com.gaurav.smartcook.ui.Login.ForgetScreen
 import com.gaurav.smartcook.ui.Login.LoginScreen
 import com.gaurav.smartcook.ui.Login.RegistrationScreen
-import com.gaurav.smartcook.ui.runrecipie.DishSelectionScreen
 import com.gaurav.smartcook.ui.runrecipie.PrerequisitScreen
+import com.gaurav.smartcook.ui.runrecipie.RecipieSummaryViewModel
 import com.gaurav.smartcook.ui.runrecipie.steps.StepsScreen
 import com.gaurav.smartcook.viewmodel.AuthViewModel
 
@@ -69,7 +68,6 @@ fun NavGraphBuilder.authNavGraph(
                     }
                 }
 
-///
                 RegistrationScreen(
                     viewModel = authViewModel,
                     onSignUpClick = { name, email, password ->
@@ -104,24 +102,30 @@ fun NavGraphBuilder.authNavGraph(
                     onBackToLoginClick = { navController.navigate(Screen.Login.route) }
                 )
             }
-
-
-
-
         }
-
-
     }
 
 
 
-fun NavGraphBuilder.recipeNavGraph(navController: NavHostController) {
+fun NavGraphBuilder.recipeNavGraph(
+    navController: NavHostController,
+    recipeViewModel: RecipieSummaryViewModel
+) {
     navigation(
-        startDestination = Screen.DishSelection.route,
+        startDestination = Screen.RecipeSteps.route,
         route = "recipe_wizard"
     ) {
-        composable(route = Screen.DishSelection.route) { DishSelectionScreen() }
         composable(route = Screen.Prerequisites.route) { PrerequisitScreen() }
-        composable(route = Screen.RecipeSteps.route) { StepsScreen() }
+        composable(route = Screen.RecipeSteps.route) {
+            StepsScreen(
+                viewModel = recipeViewModel,
+                onBack = { navController.popBackStack() },
+                onFinish = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo("recipe_wizard") { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }

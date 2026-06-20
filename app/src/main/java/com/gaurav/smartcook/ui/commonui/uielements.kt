@@ -50,7 +50,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.gaurav.smartcook.R
-import com.gaurav.smartcook.ui.Home.food
 import com.gaurav.smartcook.ui.Home.prevRecipie
 
 
@@ -188,7 +187,7 @@ fun SimpleSearchBar(
     suggestions: List<String>,
     modifier: Modifier = Modifier
 ) {
-    // Controls expansion state of the search bar
+
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Box(
@@ -227,7 +226,7 @@ fun SimpleSearchBar(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )
         ) {
-            // Display search results in an efficient scrollable list
+
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(16.dp),

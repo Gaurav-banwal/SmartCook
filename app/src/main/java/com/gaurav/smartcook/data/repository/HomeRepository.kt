@@ -90,7 +90,7 @@ class HomeRepository  @Inject constructor(
             val response = model.generateContent(userPrompt)
             var jsonString = response.text ?: return null
             
-            // Clean markdown code blocks if the model outputs them
+
             if (jsonString.startsWith("```")) {
                 jsonString = jsonString.trim()
                 jsonString = if (jsonString.startsWith("```json")) {
