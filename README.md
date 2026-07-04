@@ -16,6 +16,8 @@ Smart Cook is a modern Android application designed to eliminate "what should I 
   <img src="images/settingspage.jpeg" width="30%" />
 </p>
 
+**Note**:-  The pizza image is used for where no image cant be found through spoonacular api
+
 ## 🚀 Features
 
 ### Currently Implemented
@@ -26,10 +28,6 @@ Smart Cook is a modern Android application designed to eliminate "what should I 
 *   **AI Recipe Generation:** Integrated Gemini 1.5 Flash for intelligent recipe suggestions based on pantry items.
 *   **Step-by-Step Cooking:** Immersive full-screen UI for following recipe instructions.
 
-### In Progress / Remaining
-*   **Spoonacular API Integration:** Enhancing the UI with high-quality ingredient and dish imagery.
-*   **Advanced Filtering:** Sorting recipes by preparation time, dietary restrictions, or calorie count.
-*   **UI Polishing:** Transitioning from "functional" to "production-ready" with custom animations and Material 3 components.
 
 ## 🛠 Tech Stack
 *   **Language:** Kotlin
